@@ -64,7 +64,7 @@ class McpServerTest(unittest.TestCase):
             "memory_recall", "memory_remember", "memory_forget", "memory_audit",
             "memory_ingest", "memory_promote", "memory_decay",
             "memory_core_propose", "memory_core_confirm", "memory_core_list",
-            "memory_digest_generate", "memory_digest_get",
+            "memory_digest_generate", "memory_digest_get", "memory_tick",
         })
 
     def test_recall_and_forget(self):

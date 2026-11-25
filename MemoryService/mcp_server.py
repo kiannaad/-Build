@@ -14,6 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import auto_tick  # noqa: E402
 import db  # noqa: E402
 import decay_job  # noqa: E402
 import digest  # noqa: E402
@@ -103,6 +104,11 @@ TOOLS = [
             "properties": {"memory_id": {"type": "string"}, "reason": {"type": "string"}},
             "required": ["memory_id"],
         },
+    },
+    {
+        "name": "memory_tick",
+        "description": "立即执行一次增量入库并刷新当天摘要（服务内自动心跳每 10 分钟也会跑）。",
+        "inputSchema": {"type": "object", "properties": {}},
     },
     {
         "name": "memory_digest_generate",
@@ -214,6 +220,8 @@ def call_tool(name: str, args: dict) -> dict:
         if name == "memory_promote":
             db.set_memory_status(conn, str(args["memory_id"]), "active", str(args.get("reason", "confirmed")))
             return _text({"ok": True, "memory_id": args["memory_id"], "status": "active"})
+        if name == "memory_tick":
+            return _text(auto_tick.tick_once())
         if name == "memory_digest_generate":
             return _text({"digest": digest.generate(conn, args.get("day"))})
         if name == "memory_digest_get":
@@ -271,6 +279,7 @@ def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", newline="\n")
         sys.stderr.reconfigure(encoding="utf-8", newline="\n")
+    auto_tick.start()
     for line in sys.stdin:
         line = line.strip()
         if not line:

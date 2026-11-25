@@ -62,6 +62,19 @@ class SessionTailTest(unittest.TestCase):
         body = self.conn.execute("SELECT body FROM memories").fetchone()["body"]
         self.assertIn("乌龙茶", body)
 
+    def test_workspace_scope(self):
+        other = _session_file(self.root / "other", [
+            {"type": "session", "version": 4, "id": "session-other", "createdAt": 1, "cwd": "D:\\别的项目"},
+            {"type": "user/message", "seq": 1, "time": 1795575000000,
+             "data": {"role": "user", "content": [{"type": "text", "text": "我喜欢喝咖啡。"}]}},
+        ])
+        result = session_tail.ingest_file(
+            self.conn, other, workspaces={r"d:\大肥鱼"},
+        )
+        self.assertEqual(result["skipped_file"], 1)
+        self.assertEqual(result["new_events"], 0)
+        self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM events").fetchone()[0], 0)
+
     def test_reasoning_not_stored(self):
         session_tail.ingest_file(self.conn, self.path)
         contents = [r["content"] for r in self.conn.execute("SELECT content FROM events").fetchall()]

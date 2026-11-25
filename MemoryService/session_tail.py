@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sqlite3
 import sys
 from datetime import datetime, timezone
@@ -21,6 +22,13 @@ import extractor
 
 NOISE_PREFIXES = ("<system-reminder>", "[SCHEDULE REMINDER", "[dsh-proactive")
 STATE_NAME = "tail_state.json"
+DEFAULT_WORKSPACES = (r"D:\大肥鱼",)
+
+
+def allowed_workspaces() -> set[str]:
+    raw = os.environ.get("DFY_MEMORY_WORKSPACES", "")
+    items = [x.strip() for x in raw.split(";") if x.strip()] if raw else list(DEFAULT_WORKSPACES)
+    return {x.rstrip("\\/").casefold() for x in items}
 
 
 def _text_of(ev: dict) -> str:
@@ -64,10 +72,21 @@ def iter_events(path: Path) -> list[dict]:
     return out
 
 
-def ingest_file(conn: sqlite3.Connection, path: Path, *, dry_run: bool = False) -> dict:
+def ingest_file(
+    conn: sqlite3.Connection,
+    path: Path,
+    *,
+    dry_run: bool = False,
+    workspaces: set[str] | None = None,
+) -> dict:
     events = iter_events(path)
     session_id = _session_id(events, path)
-    counts = {"user": 0, "assistant": 0, "skipped": 0, "candidates": 0, "new_events": 0}
+    cwd = next((str(e.get("cwd") or "") for e in events if e.get("type") == "session"), "")
+    counts = {"user": 0, "assistant": 0, "skipped": 0, "candidates": 0, "new_events": 0, "skipped_file": 0}
+    allowed = allowed_workspaces() if workspaces is None else workspaces
+    if cwd and cwd.rstrip("\\/").casefold() not in allowed:
+        counts["skipped_file"] = 1
+        return counts
     for ev in events:
         etype = ev.get("type")
         if etype not in ("user/message", "assistant/message"):
@@ -116,7 +135,8 @@ def run(root: Path | None = None, *, dry_run: bool = False, limit: int = 0) -> d
     files = sorted(root.rglob("session.v4.jsonl.zstd"), key=lambda p: p.stat().st_mtime, reverse=True)
     if limit:
         files = files[:limit]
-    total = {"files": 0, "user": 0, "assistant": 0, "skipped": 0, "candidates": 0, "new_events": 0}
+    total = {"files": 0, "skipped_files": 0, "user": 0, "assistant": 0, "skipped": 0,
+             "candidates": 0, "new_events": 0}
     conn = db.init_db(Path.home() / ".dsh" / "memory-v2" / "memory.db")
     try:
         for path in files:
@@ -128,7 +148,10 @@ def run(root: Path | None = None, *, dry_run: bool = False, limit: int = 0) -> d
             result = ingest_file(conn, path, dry_run=dry_run)
             for k in ("user", "assistant", "skipped", "candidates", "new_events"):
                 total[k] += result[k]
-            total["files"] += 1
+            if result["skipped_file"]:
+                total["skipped_files"] += 1
+            else:
+                total["files"] += 1
             if not dry_run:
                 state[key] = marker
         if not dry_run:

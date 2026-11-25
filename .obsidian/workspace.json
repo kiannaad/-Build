@@ -190,6 +190,12 @@
   },
   "active": "0f703de13ee764d6",
   "lastOpenFiles": [
+    "Doc/变更/index.md~RF179839d.TMP",
+    "Doc/变更/2026-11-25-记忆工作区白名单与自动心跳.md",
+    "MemoryService/__pycache__/auto_tick.cpython-314.pyc",
+    "MemoryService/tests/__pycache__/test_auto_tick.cpython-314.pyc",
+    "MemoryService/tests/test_auto_tick.py",
+    "MemoryService/auto_tick.py",
     "Doc/变更/2026-11-25-向量层接口.md",
     "MemoryService/__pycache__/embeddings.cpython-314.pyc",
     "MemoryService/tests/__pycache__/test_embeddings.cpython-314.pyc",
