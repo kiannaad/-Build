@@ -65,7 +65,7 @@ class McpServerTest(unittest.TestCase):
             "memory_ingest", "memory_promote", "memory_decay",
             "memory_core_propose", "memory_core_confirm", "memory_core_list",
             "memory_digest_generate", "memory_digest_get", "memory_tick",
-            "memory_candidates", "memory_reject",
+            "memory_candidates", "memory_reject", "memory_restore",
         })
 
     def test_recall_and_forget(self):
@@ -82,6 +82,30 @@ class McpServerTest(unittest.TestCase):
         self.assertTrue(json.loads(responses[1]["result"]["content"][0]["text"])["ok"])
         third = json.loads(responses[2]["result"]["content"][0]["text"])
         self.assertEqual(third["hits"], [])
+
+    def test_restore_rejected_candidate(self):
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_ingest",
+                        "arguments": {"turn_id": "restore-1", "text": "我喜欢喝乌龙茶。"}}},
+        ])
+        candidate = json.loads(responses[0]["result"]["content"][0]["text"])["candidate_ids"][0]
+        self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_reject", "arguments": {"memory_id": candidate}}},
+        ])
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_restore", "arguments": {"memory_id": candidate}}},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "memory_candidates", "arguments": {}}},
+            {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+             "params": {"name": "memory_restore", "arguments": {"memory_id": candidate}}},
+        ])
+        self.assertTrue(json.loads(responses[0]["result"]["content"][0]["text"])["ok"])
+        entries = json.loads(responses[1]["result"]["content"][0]["text"])["entries"]
+        self.assertIn(candidate, [e["id"] for e in entries])
+        self.assertIn("error", responses[2])
 
     def test_candidate_list_and_reject(self):
         responses = self._run([

@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import db
+import decay_job
 import digest
 import session_tail
 
@@ -26,9 +27,11 @@ def tick_once() -> dict:
     conn = db.init_db(Path.home() / ".dsh" / "memory-v2" / "memory.db")
     try:
         digest.generate(conn, today)
+        # 只监控不归档：报告哪些记忆已低于保持率阈值，实际归档仍由用户/模型显式触发
+        stale = decay_job.archive_stale(conn, dry_run=True)
     finally:
         conn.close()
-    return {"ingest": ingest, "digest_day": today}
+    return {"ingest": ingest, "digest_day": today, "stale": len(stale)}
 
 
 def _loop(interval_seconds: int) -> None:

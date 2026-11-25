@@ -339,6 +339,20 @@ def reject_candidate(conn: sqlite3.Connection, memory_id: str, reason: str = "")
     conn.commit()
 
 
+def restore_memory(conn: sqlite3.Connection, memory_id: str, reason: str = "") -> None:
+    """把 deleted / archived 的记忆恢复为 candidate，重新进入审核。"""
+    now = utcnow()
+    cur = conn.execute(
+        "UPDATE memories SET status = 'candidate', archived_at = NULL, updated_at = ?"
+        " WHERE id = ? AND status IN ('deleted','archived')",
+        (now, memory_id),
+    )
+    if cur.rowcount == 0:
+        raise ValueError(f"没有可恢复的记忆: {memory_id}")
+    record_audit(conn, "restore", "memory", memory_id, {"reason": reason})
+    conn.commit()
+
+
 def propose_core(conn: sqlite3.Connection, *, body: str, reason: str = "") -> str:
     """新增一条 L4 核心记忆候选（proposed），必须再经 confirm 才生效。"""
     core_id = "core-" + uuid.uuid4().hex

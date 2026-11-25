@@ -97,6 +97,15 @@ TOOLS = [
         },
     },
     {
+        "name": "memory_restore",
+        "description": "把已删除或已归档的记忆恢复为候选，重新进入审核。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"memory_id": {"type": "string"}, "reason": {"type": "string"}},
+            "required": ["memory_id"],
+        },
+    },
+    {
         "name": "memory_candidates",
         "description": "列出待审的 L2 候选记忆。",
         "inputSchema": {
@@ -234,6 +243,9 @@ def call_tool(name: str, args: dict) -> dict:
             )
             candidates = extractor.extract_from_event(conn, event_id)
             return _text({"event_id": event_id, "created": created, "candidate_ids": candidates})
+        if name == "memory_restore":
+            db.restore_memory(conn, str(args["memory_id"]), str(args.get("reason", "")))
+            return _text({"ok": True, "memory_id": args["memory_id"], "status": "candidate"})
         if name == "memory_candidates":
             return _text({"entries": db.list_candidates(conn, limit=int(args.get("limit", 20)))})
         if name == "memory_reject":
