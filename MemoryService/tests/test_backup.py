@@ -57,6 +57,35 @@ class BackupTest(unittest.TestCase):
             conn.close()
         self.assertEqual(n, 1)
 
+    def test_restore_to_new_path(self):
+        out = backup.create(
+            self.root / "backups", memory_db=self.db_path,
+            persona_dir=self.persona, include_config=False,
+        )
+        target = self.root / "new" / "memory.db"
+        result = backup.restore(
+            out, memory_db=target, persona_dir=self.persona, config_file=self.root / "cfg.yml",
+        )
+        self.assertIn("memory.db", result["restored"])
+        conn = sqlite3.connect(target)
+        try:
+            self.assertEqual(conn.execute("SELECT COUNT(*) FROM events").fetchone()[0], 1)
+        finally:
+            conn.close()
+
+    def test_restore_refuses_overwrite_without_force(self):
+        out = backup.create(
+            self.root / "backups", memory_db=self.db_path,
+            persona_dir=self.persona, include_config=False,
+        )
+        with self.assertRaises(ValueError):
+            backup.restore(out, memory_db=self.db_path, persona_dir=self.persona,
+                           config_file=self.root / "cfg.yml")
+        result = backup.restore(out, memory_db=self.db_path, persona_dir=self.persona,
+                                config_file=self.root / "cfg.yml", force=True)
+        self.assertIn("existing-db-backup", result["restored"])
+        self.assertTrue(list(self.db_path.parent.glob("memory.db.pre-restore-*")))
+
     def test_verify_rejects_non_backup(self):
         bad = self.root / "bad.zip"
         with zipfile.ZipFile(bad, "w") as zf:

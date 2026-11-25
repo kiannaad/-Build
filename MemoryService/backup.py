@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sqlite3
 import sys
 import tempfile
@@ -94,11 +95,68 @@ def verify(zip_path: Path) -> dict:
     return manifest
 
 
+def restore(
+    zip_path: Path,
+    *,
+    memory_db: Path | None = None,
+    persona_dir: Path | None = None,
+    config_file: Path | None = None,
+    force: bool = False,
+) -> dict:
+    """从备份恢复。默认拒绝覆盖已有记忆库；force=True 时先把旧库另存。"""
+    memory_db = memory_db or HOME / ".dsh" / "memory-v2" / "memory.db"
+    persona_dir = persona_dir or Path(r"D:\大肥鱼\人格")
+    config_file = config_file or HOME / ".dsh" / "profiles" / "desktop" / "cordis.patch.yml"
+    info = verify(zip_path)
+    if memory_db.exists() and not force:
+        raise ValueError(f"目标记忆库已存在，拒绝覆盖：{memory_db}（需要 force=True）")
+
+    restored = []
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    with tempfile.TemporaryDirectory() as tmp:
+        tmpdir = Path(tmp)
+        with zipfile.ZipFile(zip_path) as zf:
+            zf.extractall(tmpdir)
+        src_db = tmpdir / "memory.db"
+        if not src_db.exists():
+            raise ValueError("备份缺少 memory.db")
+        conn = sqlite3.connect(str(src_db))
+        try:
+            check = conn.execute("PRAGMA integrity_check").fetchone()[0]
+        finally:
+            conn.close()
+        if check != "ok":
+            raise ValueError(f"备份数据库完整性检查失败：{check}")
+        if memory_db.exists():
+            shutil.copy2(memory_db, memory_db.with_name(f"memory.db.pre-restore-{stamp}"))
+            restored.append("existing-db-backup")
+        memory_db.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src_db, memory_db)
+        restored.append("memory.db")
+        persona_src = tmpdir / "persona"
+        if persona_src.exists() and persona_dir:
+            persona_dir.mkdir(parents=True, exist_ok=True)
+            for p in persona_src.glob("*.md"):
+                shutil.copy2(p, persona_dir / p.name)
+                restored.append(f"persona/{p.name}")
+        cfg_src = tmpdir / "config" / "cordis.patch.yml"
+        if cfg_src.exists() and config_file:
+            config_file.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(cfg_src, config_file)
+            restored.append("config")
+    return {"restored": restored, "counts": info["counts"], "zip": str(zip_path)}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--target", type=Path, default=None)
     ap.add_argument("--verify", type=Path, default=None)
+    ap.add_argument("--restore", type=Path, default=None)
+    ap.add_argument("--force", action="store_true")
     args = ap.parse_args()
+    if args.restore:
+        print(json.dumps(restore(args.restore, force=args.force), ensure_ascii=False, indent=2))
+        return 0
     if args.verify:
         print(json.dumps(verify(args.verify), ensure_ascii=False, indent=2))
         return 0
