@@ -64,6 +64,7 @@ class McpServerTest(unittest.TestCase):
             "memory_recall", "memory_remember", "memory_forget", "memory_audit",
             "memory_ingest", "memory_promote", "memory_decay",
             "memory_core_propose", "memory_core_confirm", "memory_core_list",
+            "memory_digest_generate", "memory_digest_get",
         })
 
     def test_recall_and_forget(self):
@@ -104,6 +105,19 @@ class McpServerTest(unittest.TestCase):
         after = json.loads(second[2]["result"]["content"][0]["text"])
         self.assertEqual(before["hits"], [])
         self.assertEqual(len(after["hits"]), 1)
+
+    def test_digest_generate_and_get(self):
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_digest_generate", "arguments": {"day": "2026-11-25"}}},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "memory_digest_get", "arguments": {"day": "2026-11-25"}}},
+        ])
+        generated = json.loads(responses[0]["result"]["content"][0]["text"])["digest"]
+        fetched = json.loads(responses[1]["result"]["content"][0]["text"])["digest"]
+        self.assertEqual(generated["day"], "2026-11-25")
+        self.assertIn("用户 1", generated["summary"])
+        self.assertEqual(fetched["summary"], generated["summary"])
 
     def test_core_propose_confirm_list(self):
         responses = self._run([

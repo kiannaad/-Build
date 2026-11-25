@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import db  # noqa: E402
 import decay_job  # noqa: E402
+import digest  # noqa: E402
 import extractor  # noqa: E402
 
 SERVER_INFO = {"name": "dafeiyu-memory", "version": "0.1.0"}
@@ -101,6 +102,23 @@ TOOLS = [
             "type": "object",
             "properties": {"memory_id": {"type": "string"}, "reason": {"type": "string"}},
             "required": ["memory_id"],
+        },
+    },
+    {
+        "name": "memory_digest_generate",
+        "description": "生成/更新某天的 L1 每日摘要（默认今天，UTC 日期）。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"day": {"type": "string", "description": "YYYY-MM-DD，默认今天"}},
+        },
+    },
+    {
+        "name": "memory_digest_get",
+        "description": "读取某天的 L1 每日摘要。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"day": {"type": "string"}},
+            "required": ["day"],
         },
     },
     {
@@ -196,6 +214,10 @@ def call_tool(name: str, args: dict) -> dict:
         if name == "memory_promote":
             db.set_memory_status(conn, str(args["memory_id"]), "active", str(args.get("reason", "confirmed")))
             return _text({"ok": True, "memory_id": args["memory_id"], "status": "active"})
+        if name == "memory_digest_generate":
+            return _text({"digest": digest.generate(conn, args.get("day"))})
+        if name == "memory_digest_get":
+            return _text({"digest": digest.get(conn, str(args["day"]))})
         if name == "memory_core_propose":
             core_id = db.propose_core(conn, body=str(args["body"]), reason=str(args.get("reason", "")))
             return _text({"core_id": core_id, "status": "proposed"})
