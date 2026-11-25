@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import re
 import sqlite3
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -209,10 +210,12 @@ def _candidates(conn: sqlite3.Connection, query: str, limit: int) -> list[tuple[
             "SELECT * FROM memories WHERE status = 'active' ORDER BY updated_at DESC LIMIT ?", (limit,)
         ).fetchall()
         return [(r, 0.5) for r in rows]
+    terms = [t for t in re.split(r"[\s，。！？、,.;:：]+", q) if t] or [q]
     found: list[sqlite3.Row] = []
+    fts_terms = [t for t in terms if len(t) >= 2] or terms
     if len(q) >= 3:
         try:
-            pattern = '"' + q.replace('"', '""') + '"'
+            pattern = " OR ".join('"' + t.replace('"', '""') + '"' for t in fts_terms)
             found = conn.execute(
                 """SELECT m.* FROM memories_fts f JOIN memories m ON m.id = f.memory_id
                    WHERE memories_fts MATCH ? AND m.status = 'active'
@@ -222,13 +225,20 @@ def _candidates(conn: sqlite3.Connection, query: str, limit: int) -> list[tuple[
         except sqlite3.OperationalError:
             found = []
     if not found:
-        like = "%" + q.replace("%", "\\%").replace("_", "\\_") + "%"
+        where = " OR ".join(["body LIKE ? ESCAPE '\\'"] * len(terms))
+        params = ["%" + t.replace("%", "\\%").replace("_", "\\_") + "%" for t in terms]
         found = conn.execute(
-            """SELECT * FROM memories WHERE status = 'active' AND body LIKE ? ESCAPE '\\'
-               ORDER BY updated_at DESC LIMIT ?""",
-            (like, limit),
+            f"""SELECT * FROM memories WHERE status = 'active' AND ({where})
+                ORDER BY updated_at DESC LIMIT ?""",
+            (*params, limit),
         ).fetchall()
-    return [(r, 1.0 / (1.0 + i)) for i, r in enumerate(found)]
+
+    def similarity(row: sqlite3.Row) -> float:
+        body = str(row["body"])
+        matched = sum(1 for t in fts_terms if t in body)
+        return max(matched / len(fts_terms), 0.2)
+
+    return [(r, similarity(r)) for r in found]
 
 
 def recall(

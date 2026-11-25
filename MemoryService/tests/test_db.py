@@ -64,6 +64,12 @@ class MemoryDbTest(unittest.TestCase):
         self.assertIn("年糕", hits[0]["body"])
         self.assertGreater(hits[0]["score"], 0)
 
+    def test_recall_multi_term_any(self):
+        self._memory()
+        hits = db.recall(self.conn, "橘猫 年糕")
+        self.assertTrue(hits)
+        self.assertIn("年糕", hits[0]["body"])
+
     def test_archive_and_restore(self):
         memory_id = self._memory()
         db.set_memory_status(self.conn, memory_id, "archived", "测试归档")
