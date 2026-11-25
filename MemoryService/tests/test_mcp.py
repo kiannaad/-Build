@@ -44,14 +44,14 @@ class McpServerTest(unittest.TestCase):
         payload = "\n".join(json.dumps(r, ensure_ascii=False) for r in requests) + "\n"
         proc = subprocess.run(
             [sys.executable, str(ROOT / "mcp_server.py")],
-            input=payload,
-            text=True,
+            input=payload.encode("utf-8"),
             capture_output=True,
             env=env,
             timeout=30,
         )
-        self.assertEqual(proc.returncode, 0, proc.stderr)
-        return [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
+        self.assertEqual(proc.returncode, 0, proc.stderr.decode("utf-8", "replace"))
+        stdout = proc.stdout.decode("utf-8")
+        return [json.loads(line) for line in stdout.splitlines() if line.strip()]
 
     def test_initialize_and_tools(self):
         responses = self._run([
