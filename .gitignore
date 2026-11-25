@@ -27,3 +27,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.log
+
+# 编辑器本机状态
+.obsidian/
