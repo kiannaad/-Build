@@ -268,6 +268,25 @@ def recall(
             "confidence": memory["confidence"],
             "reinforcement": memory["reinforcement"],
         })
+    # L4：已确认的核心记忆不衰减，相关时优先召回
+    q = query.strip().lower()
+    cores = conn.execute(
+        "SELECT id, body FROM core_memories WHERE status = 'confirmed' ORDER BY created_at DESC"
+    ).fetchall()
+    for core in cores:
+        if q and q not in core["body"].lower():
+            continue
+        out.append({
+            "id": core["id"],
+            "kind": "core",
+            "body": core["body"],
+            "tags": "core",
+            "score": 1.0,
+            "retention": 1.0,
+            "importance": 5,
+            "confidence": 1.0,
+            "reinforcement": 0,
+        })
     out.sort(key=lambda x: x["score"], reverse=True)
     return out[:limit]
 
@@ -296,6 +315,41 @@ def upsert_digest(
     )
     record_audit(conn, "digest", "day", day, {"summary_chars": len(summary)})
     conn.commit()
+
+
+def propose_core(conn: sqlite3.Connection, *, body: str, reason: str = "") -> str:
+    """新增一条 L4 核心记忆候选（proposed），必须再经 confirm 才生效。"""
+    core_id = "core-" + uuid.uuid4().hex
+    now = utcnow()
+    conn.execute(
+        "INSERT INTO core_memories(id, body, status, version, reason, created_at, updated_at)"
+        " VALUES (?, ?, 'proposed', 1, ?, ?, ?)",
+        (core_id, body, reason, now, now),
+    )
+    record_audit(conn, "core_propose", "core", core_id, {"reason": reason})
+    conn.commit()
+    return core_id
+
+
+def confirm_core(conn: sqlite3.Connection, core_id: str, reason: str = "") -> None:
+    now = utcnow()
+    cur = conn.execute(
+        "UPDATE core_memories SET status = 'confirmed', confirmed_at = ?, version = version + 1,"
+        " reason = ?, updated_at = ? WHERE id = ? AND status = 'proposed'",
+        (now, reason, now, core_id),
+    )
+    if cur.rowcount == 0:
+        raise ValueError(f"没有可确认的 L4 候选: {core_id}")
+    record_audit(conn, "core_confirm", "core", core_id, {"reason": reason})
+    conn.commit()
+
+
+def list_core(conn: sqlite3.Connection, *, include_deleted: bool = False) -> list[dict]:
+    sql = "SELECT id, body, status, version, confirmed_at, reason, created_at FROM core_memories"
+    if not include_deleted:
+        sql += " WHERE status != 'deleted'"
+    sql += " ORDER BY created_at DESC"
+    return [dict(r) for r in conn.execute(sql).fetchall()]
 
 
 def record_audit(

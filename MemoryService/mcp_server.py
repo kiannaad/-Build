@@ -104,6 +104,32 @@ TOOLS = [
         },
     },
     {
+        "name": "memory_core_propose",
+        "description": "提出一条 L4 核心记忆候选；需再经 memory_core_confirm 才生效。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"body": {"type": "string"}, "reason": {"type": "string"}},
+            "required": ["body"],
+        },
+    },
+    {
+        "name": "memory_core_confirm",
+        "description": "确认一条 L4 核心记忆（仅 proposed 可确认）。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"core_id": {"type": "string"}, "reason": {"type": "string"}},
+            "required": ["core_id"],
+        },
+    },
+    {
+        "name": "memory_core_list",
+        "description": "列出 L4 核心记忆（默认排除 deleted）。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"include_deleted": {"type": "boolean", "default": False}},
+        },
+    },
+    {
         "name": "memory_decay",
         "description": "按保持率归档低价值记忆；默认 dry-run，只报告不写入。",
         "inputSchema": {
@@ -170,6 +196,14 @@ def call_tool(name: str, args: dict) -> dict:
         if name == "memory_promote":
             db.set_memory_status(conn, str(args["memory_id"]), "active", str(args.get("reason", "confirmed")))
             return _text({"ok": True, "memory_id": args["memory_id"], "status": "active"})
+        if name == "memory_core_propose":
+            core_id = db.propose_core(conn, body=str(args["body"]), reason=str(args.get("reason", "")))
+            return _text({"core_id": core_id, "status": "proposed"})
+        if name == "memory_core_confirm":
+            db.confirm_core(conn, str(args["core_id"]), str(args.get("reason", "")))
+            return _text({"ok": True, "core_id": args["core_id"], "status": "confirmed"})
+        if name == "memory_core_list":
+            return _text({"entries": db.list_core(conn, include_deleted=bool(args.get("include_deleted", False)))})
         if name == "memory_decay":
             dry = bool(args.get("dry_run", True))
             archived = decay_job.archive_stale(

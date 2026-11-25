@@ -63,6 +63,7 @@ class McpServerTest(unittest.TestCase):
         self.assertEqual(names, {
             "memory_recall", "memory_remember", "memory_forget", "memory_audit",
             "memory_ingest", "memory_promote", "memory_decay",
+            "memory_core_propose", "memory_core_confirm", "memory_core_list",
         })
 
     def test_recall_and_forget(self):
@@ -103,6 +104,35 @@ class McpServerTest(unittest.TestCase):
         after = json.loads(second[2]["result"]["content"][0]["text"])
         self.assertEqual(before["hits"], [])
         self.assertEqual(len(after["hits"]), 1)
+
+    def test_core_propose_confirm_list(self):
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_core_propose",
+                        "arguments": {"body": "大肥鱼运行在本机 DSH", "reason": "测试"}}},
+        ])
+        core_id = json.loads(responses[0]["result"]["content"][0]["text"])["core_id"]
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_core_confirm", "arguments": {"core_id": core_id}}},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "memory_core_list", "arguments": {}}},
+            {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+             "params": {"name": "memory_core_confirm", "arguments": {"core_id": core_id}}},
+        ])
+        self.assertTrue(json.loads(responses[0]["result"]["content"][0]["text"])["ok"])
+        entries = json.loads(responses[1]["result"]["content"][0]["text"])["entries"]
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["status"], "confirmed")
+        self.assertIn("error", responses[2])
+        # 已确认核心记忆应进入召回，且排在普通记忆前
+        recall = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_recall", "arguments": {"query": "DSH"}}},
+        ])
+        hits = json.loads(recall[0]["result"]["content"][0]["text"])["hits"]
+        self.assertTrue(hits)
+        self.assertEqual(hits[0]["kind"], "core")
 
     def test_decay_dry_run_then_apply(self):
         import datetime as _dt

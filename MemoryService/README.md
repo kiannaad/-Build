@@ -12,6 +12,7 @@
 | 归档 / 遗忘 / 恢复 | ✅ `db.set_memory_status` |
 | 艾宾浩斯保持率 + 强化延长半衰期 | ✅ `db.retention` |
 | 关键词召回 + 精排公式 | ✅ `db.recall`（FTS5 trigram，失败退 LIKE） |
+| L4 核心记忆 | ✅ propose / confirm / list；已确认的优先进入召回，不衰减 |
 | 每日摘要（L1） | ✅ `db.upsert_digest` |
 | 审计 | ✅ `memory_audit` |
 | 向量（bge-m3 / sqlite-vec） | ⬜ 未开始 |
@@ -27,7 +28,7 @@ cd D:\大肥鱼\MemoryService
 python -m unittest discover -s tests -v
 ```
 
-当前 24 项测试全过：存储 9、MCP 5、提取 5、衰减 5。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要、审计、MCP 调用、ingest→promote→recall、decay dry-run→apply、候选提取与去重。
+当前 25 项测试全过：存储 9、MCP 6、提取 5、衰减 5。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、候选提取与去重。
 
 ## 关键约束（写进代码，不靠自觉）
 
