@@ -145,6 +145,12 @@ def handle(request: dict) -> dict | None:
 
 
 def main() -> int:
+    # Windows 下 Python 默认按本地代码页写 stdout，MCP 客户端按 UTF-8 解码会乱码。
+    if hasattr(sys.stdin, "reconfigure"):
+        sys.stdin.reconfigure(encoding="utf-8")
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", newline="\n")
+        sys.stderr.reconfigure(encoding="utf-8", newline="\n")
     for line in sys.stdin:
         line = line.strip()
         if not line:
