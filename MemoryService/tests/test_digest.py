@@ -39,12 +39,33 @@ class DigestTest(unittest.TestCase):
         )
         self.conn.commit()
 
-        result = digest.generate(self.conn, "2026-11-25")
+        result = digest.generate(self.conn, "2026-11-25", report_dirs=[])
         self.assertIn("用户 1", result["summary"])
         self.assertIn("助手 1", result["summary"])
         self.assertIn("激活 1", result["summary"])
         self.assertIn("每天提醒喝水", result["todos_json"])
         self.assertTrue(json.loads(result["source_event_ids"]))
+
+    def test_report_brief_is_included(self):
+        bili = Path(self.tmp.name) / "bili"
+        douyin = Path(self.tmp.name) / "douyin"
+        bili.mkdir()
+        douyin.mkdir()
+        (bili / "2026-11-25.md").write_text(
+            "### BV1AAA\n- 标题：B站条目\n", encoding="utf-8",
+        )
+        (douyin / "2026-11-25.md").write_text(
+            "### 7300000000000000000\n**抖音条目** · @作者\n", encoding="utf-8",
+        )
+        (douyin / "forward-20261125-1758.md").write_text(
+            "### 7300000000000000001\n**中间产物** · @作者\n", encoding="utf-8",
+        )
+        result = digest.generate(self.conn, "2026-11-25", report_dirs=[bili, douyin])
+        self.assertIn("B站推荐 1 条", result["summary"])
+        self.assertIn("B站条目", result["summary"])
+        self.assertIn("抖音推荐 1 条", result["summary"])
+        self.assertIn("抖音条目", result["summary"])
+        self.assertNotIn("中间产物", result["summary"])
 
     def test_get_missing_returns_none(self):
         self.assertIsNone(digest.get(self.conn, "2020-01-01"))

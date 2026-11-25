@@ -13,7 +13,7 @@
 | 艾宾浩斯保持率 + 强化延长半衰期 | ✅ `db.retention` |
 | 关键词召回 + 精排公式 | ✅ `db.recall`（FTS5 trigram，失败退 LIKE） |
 | L4 核心记忆 | ✅ propose / confirm / list；已确认的优先进入召回，不衰减 |
-| 每日摘要（L1） | ✅ `digest.generate/get`：按天统计轮次、候选、激活、承诺 |
+| 每日摘要（L1） | ✅ `digest.generate/get`：轮次、候选、激活、承诺 + 当天日报概览 |
 | 审计 | ✅ `memory_audit` |
 | 向量（bge-m3 / sqlite-vec） | ✅ bge-m3 已启用（Ollama 本地），语义召回可用；仍为暴力余弦 |
 | MCP stdio 服务 | ✅ `mcp_server.py`：12 个工具（recall / remember / forget / audit / ingest / promote / decay / core_* / digest_*） |
@@ -37,7 +37,7 @@ cd D:\大肥鱼\MemoryService
 python -m unittest discover -s tests -v
 ```
 
-当前 58 项测试全过：存储 9、MCP 12、规则提取 5、模型提取 6、衰减 5、摘要 2、日志入库 3、向量 5、心跳 2、备份 4、语义召回 3、日报索引 2。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要生成、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、每日摘要生成/读取。
+当前 59 项测试全过：存储 9、MCP 12、规则提取 5、模型提取 6、衰减 5、摘要 3、日志入库 3、向量 5、心跳 2、备份 4、语义召回 3、日报索引 2。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要生成、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、每日摘要生成/读取。
 
 ## 关键约束（写进代码，不靠自觉）
 
