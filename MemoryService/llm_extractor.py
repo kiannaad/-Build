@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import urllib.request
 
 import db
 import extractor
@@ -75,6 +76,28 @@ def parse_items(raw: str) -> list[dict]:
             "confidence": max(0.0, min(confidence, 1.0)),
         })
     return out
+
+
+def ollama_call_model(model: str, url: str = "http://127.0.0.1:11434"):
+    """返回一个 call_model(prompt)，走本地 Ollama /api/chat，要求 JSON 输出。"""
+    url = url.rstrip("/")
+
+    def call(prompt: str) -> str:
+        payload = json.dumps({
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "stream": False,
+            "format": "json",
+            "options": {"temperature": 0.2},
+        }, ensure_ascii=False).encode("utf-8")
+        req = urllib.request.Request(
+            f"{url}/api/chat", data=payload, headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        return str(data.get("message", {}).get("content", ""))
+
+    return call
 
 
 def extract_with_model(

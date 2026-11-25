@@ -68,6 +68,7 @@ class McpServerTest(unittest.TestCase):
             "memory_digest_generate", "memory_digest_get", "memory_tick",
             "memory_candidates", "memory_reject", "memory_restore", "memory_stats",
             "memory_embed", "memory_semantic_recall", "memory_purge",
+            "memory_extract_model",
         })
 
     def test_recall_and_forget(self):
@@ -84,6 +85,17 @@ class McpServerTest(unittest.TestCase):
         self.assertTrue(json.loads(responses[1]["result"]["content"][0]["text"])["ok"])
         third = json.loads(responses[2]["result"]["content"][0]["text"])
         self.assertEqual(third["hits"], [])
+
+    def test_model_extract_requires_chat_model_config(self):
+        conn = sqlite3.connect(self.db_path)
+        event_id = conn.execute("SELECT id FROM events LIMIT 1").fetchone()[0]
+        conn.close()
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_extract_model", "arguments": {"event_id": event_id}}},
+        ])
+        self.assertIn("error", responses[0])
+        self.assertIn("DFY_CHAT_MODEL", responses[0]["error"]["message"])
 
     def test_purge_requires_confirm_and_removes_old_deleted(self):
         responses = self._run([

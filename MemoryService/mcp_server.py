@@ -20,6 +20,7 @@ import decay_job  # noqa: E402
 import digest  # noqa: E402
 import embeddings  # noqa: E402
 import extractor  # noqa: E402
+import llm_extractor  # noqa: E402
 import semantic  # noqa: E402
 
 SERVER_INFO = {"name": "dafeiyu-memory", "version": "0.1.0"}
@@ -116,6 +117,15 @@ TOOLS = [
                 "limit": {"type": "integer", "minimum": 1, "maximum": 20, "default": 4},
             },
             "required": ["query"],
+        },
+    },
+    {
+        "name": "memory_extract_model",
+        "description": "用本地 chat 模型从一条 L3 事件提取候选；需配置 DFY_CHAT_MODEL。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"event_id": {"type": "string"}},
+            "required": ["event_id"],
         },
     },
     {
@@ -296,6 +306,17 @@ def call_tool(name: str, args: dict) -> dict:
                 conn, str(args["query"]), embedder, limit=int(args.get("limit", 4)),
             )
             return _text({"hits": hits})
+        if name == "memory_extract_model":
+            model = os.environ.get("DFY_CHAT_MODEL", "").strip()
+            if not model:
+                raise ValueError("未配置 DFY_CHAT_MODEL（本地 Ollama chat 模型名）")
+            call_model = llm_extractor.ollama_call_model(
+                model, os.environ.get("DFY_OLLAMA_URL", "http://127.0.0.1:11434"),
+            )
+            ids = llm_extractor.extract_with_model(
+                conn, event_id=str(args["event_id"]), call_model=call_model,
+            )
+            return _text({"candidate_ids": ids})
         if name == "memory_purge":
             if args.get("confirm") is not True:
                 raise ValueError("memory_purge 需要 confirm=true")
