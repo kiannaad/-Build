@@ -19,6 +19,7 @@
 | MCP stdio 服务 | ✅ `mcp_server.py`：12 个工具（recall / remember / forget / audit / ingest / promote / decay / core_* / digest_*） |
 | 候选提取器 | ✅ `extractor.py`（规则版，显式线索 + 敏感跳过 + 去重） |
 | 每日衰减任务 | ✅ `decay_job.py`（低于阈值归档，支持 dry-run） |
+| 自动 ingest | ✅ `session_tail.py`（解压会话日志、过滤注入/reasoning、`turn_id` 去重） |
 | 旧库迁移脚本 | ⬜ 未开始 |
 
 ## 运行测试
@@ -28,7 +29,7 @@ cd D:\大肥鱼\MemoryService
 python -m unittest discover -s tests -v
 ```
 
-当前 28 项测试全过：存储 9、MCP 7、提取 5、衰减 5、摘要 2。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要生成、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、每日摘要生成/读取。
+当前 30 项测试全过：存储 9、MCP 7、提取 5、衰减 5、摘要 2、日志入库 2。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要生成、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、每日摘要生成/读取。
 
 ## 关键约束（写进代码，不靠自觉）
 
