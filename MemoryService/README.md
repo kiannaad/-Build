@@ -15,7 +15,7 @@
 | 每日摘要（L1） | ✅ `db.upsert_digest` |
 | 审计 | ✅ `memory_audit` |
 | 向量（bge-m3 / sqlite-vec） | ⬜ 未开始 |
-| MCP stdio 服务 | ⬜ 未开始 |
+| MCP stdio 服务 | ✅ `mcp_server.py`（initialize / tools/list / tools/call） |
 | 候选提取器 / 衰减任务 | ⬜ 未开始 |
 | 旧库迁移脚本 | ⬜ 未开始 |
 
@@ -26,7 +26,7 @@ cd D:\大肥鱼\MemoryService
 python -m unittest discover -s tests -v
 ```
 
-当前 9 项测试全过：事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要合并、审计。
+当前 12 项测试全过：事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要合并、审计，以及 MCP 的 initialize/tools/list/召回/遗忘/无来源报错。
 
 ## 关键约束（写进代码，不靠自觉）
 
