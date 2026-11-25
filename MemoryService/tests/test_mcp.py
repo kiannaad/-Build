@@ -60,7 +60,10 @@ class McpServerTest(unittest.TestCase):
         ])
         self.assertEqual(responses[0]["result"]["serverInfo"]["name"], "dafeiyu-memory")
         names = {t["name"] for t in responses[1]["result"]["tools"]}
-        self.assertEqual(names, {"memory_recall", "memory_remember", "memory_forget", "memory_audit"})
+        self.assertEqual(names, {
+            "memory_recall", "memory_remember", "memory_forget", "memory_audit",
+            "memory_ingest", "memory_promote", "memory_decay",
+        })
 
     def test_recall_and_forget(self):
         responses = self._run([
@@ -76,6 +79,56 @@ class McpServerTest(unittest.TestCase):
         self.assertTrue(json.loads(responses[1]["result"]["content"][0]["text"])["ok"])
         third = json.loads(responses[2]["result"]["content"][0]["text"])
         self.assertEqual(third["hits"], [])
+
+    def test_ingest_promote_recall(self):
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_ingest",
+                        "arguments": {"turn_id": "mcp-ingest-1", "text": "我喜欢喝乌龙茶。"}}},
+        ])
+        payload = json.loads(responses[0]["result"]["content"][0]["text"])
+        self.assertTrue(payload["created"])
+        candidates = payload["candidate_ids"]
+        self.assertEqual(len(candidates), 1)
+        # 候选默认不参与召回
+        second = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_recall", "arguments": {"query": "乌龙茶"}}},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "memory_promote", "arguments": {"memory_id": candidates[0]}}},
+            {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+             "params": {"name": "memory_recall", "arguments": {"query": "乌龙茶"}}},
+        ])
+        before = json.loads(second[0]["result"]["content"][0]["text"])
+        after = json.loads(second[2]["result"]["content"][0]["text"])
+        self.assertEqual(before["hits"], [])
+        self.assertEqual(len(after["hits"]), 1)
+
+    def test_decay_dry_run_then_apply(self):
+        import datetime as _dt
+        import db as _db
+        conn = _db.init_db(self.db_path)
+        event_id = conn.execute("SELECT id FROM events LIMIT 1").fetchone()["id"]
+        mid = _db.add_memory(
+            conn, kind="event", body="很旧的记忆", source_event_ids=[event_id],
+            fact_owner="observed", status="active", half_life_days=30,
+        )
+        old = (_dt.datetime.now(_dt.timezone.utc) - _dt.timedelta(days=365)).isoformat().replace("+00:00", "Z")
+        conn.execute("UPDATE memories SET created_at = ? WHERE id = ?", (old, mid))
+        conn.commit()
+        conn.close()
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_decay", "arguments": {"dry_run": True}}},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "memory_decay", "arguments": {"dry_run": False}}},
+        ])
+        dry = json.loads(responses[0]["result"]["content"][0]["text"])
+        applied = json.loads(responses[1]["result"]["content"][0]["text"])
+        self.assertEqual(len(dry["archived"]), 1)
+        self.assertTrue(dry["dry_run"])
+        self.assertEqual(len(applied["archived"]), 1)
+        self.assertFalse(applied["dry_run"])
 
     def test_remember_requires_source(self):
         responses = self._run([

@@ -15,6 +15,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import db  # noqa: E402
+import decay_job  # noqa: E402
+import extractor  # noqa: E402
 
 SERVER_INFO = {"name": "dafeiyu-memory", "version": "0.1.0"}
 PROTOCOL = "2024-11-05"
@@ -76,6 +78,43 @@ TOOLS = [
             "properties": {"limit": {"type": "integer", "minimum": 1, "maximum": 100, "default": 20}},
         },
     },
+    {
+        "name": "memory_ingest",
+        "description": "把一轮对话写入 L3（turn_id 幂等），并用规则提取 L2 候选。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "turn_id": {"type": "string"},
+                "text": {"type": "string"},
+                "role": {"type": "string", "enum": ["user", "assistant"], "default": "user"},
+                "occurred_at": {"type": "string"},
+                "session_id": {"type": "string"},
+                "source_platform": {"type": "string"},
+            },
+            "required": ["turn_id", "text"],
+        },
+    },
+    {
+        "name": "memory_promote",
+        "description": "把候选记忆提升为 active；应在用户确认后调用。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"memory_id": {"type": "string"}, "reason": {"type": "string"}},
+            "required": ["memory_id"],
+        },
+    },
+    {
+        "name": "memory_decay",
+        "description": "按保持率归档低价值记忆；默认 dry-run，只报告不写入。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "threshold": {"type": "number", "minimum": 0, "maximum": 1, "default": 0.15},
+                "min_age_days": {"type": "number", "minimum": 0, "default": 7},
+                "dry_run": {"type": "boolean", "default": True},
+            },
+        },
+    },
 ]
 
 
@@ -115,6 +154,31 @@ def call_tool(name: str, args: dict) -> dict:
                 (int(args.get("limit", 20)),),
             ).fetchall()
             return _text({"entries": [dict(r) for r in rows]})
+        if name == "memory_ingest":
+            event_id, created = db.add_event(
+                conn,
+                turn_id=str(args["turn_id"]),
+                occurred_at=str(args.get("occurred_at") or db.utcnow()),
+                actor="owner",
+                role=str(args.get("role", "user")),
+                content=str(args["text"]),
+                source_platform=str(args.get("source_platform", "local")),
+                session_id=args.get("session_id"),
+            )
+            candidates = extractor.extract_from_event(conn, event_id)
+            return _text({"event_id": event_id, "created": created, "candidate_ids": candidates})
+        if name == "memory_promote":
+            db.set_memory_status(conn, str(args["memory_id"]), "active", str(args.get("reason", "confirmed")))
+            return _text({"ok": True, "memory_id": args["memory_id"], "status": "active"})
+        if name == "memory_decay":
+            dry = bool(args.get("dry_run", True))
+            archived = decay_job.archive_stale(
+                conn,
+                threshold=float(args.get("threshold", decay_job.DEFAULT_THRESHOLD)),
+                min_age_days=float(args.get("min_age_days", decay_job.DEFAULT_MIN_AGE_DAYS)),
+                dry_run=dry,
+            )
+            return _text({"archived": archived, "dry_run": dry})
         return {"content": [{"type": "text", "text": f"unknown tool: {name}"}], "isError": True}
     finally:
         conn.close()
