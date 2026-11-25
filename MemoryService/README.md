@@ -15,12 +15,13 @@
 | L4 核心记忆 | ✅ propose / confirm / list；已确认的优先进入召回，不衰减 |
 | 每日摘要（L1） | ✅ `digest.generate/get`：按天统计轮次、候选、激活、承诺 |
 | 审计 | ✅ `memory_audit` |
-| 向量（bge-m3 / sqlite-vec） | ✅ 接口：Ollama / SiliconFlow 后端、余弦召回；**未启用模型** |
+| 向量（bge-m3 / sqlite-vec） | ✅ bge-m3 已启用（Ollama 本地），语义召回可用；仍为暴力余弦 |
 | MCP stdio 服务 | ✅ `mcp_server.py`：12 个工具（recall / remember / forget / audit / ingest / promote / decay / core_* / digest_*） |
 | 候选提取器 | ✅ `extractor.py`（规则版，显式线索 + 敏感跳过 + 去重） |
 | 候选审核 | ✅ `memory_candidates` / `memory_reject`（软删除，可恢复） |
 | 恢复 | ✅ `memory_restore`（deleted/archived → candidate，重新审核） |
 | 状态 | ✅ `memory_stats`（事件/记忆/核心/摘要/审计计数） |
+| 语义召回 | ✅ `memory_embed` / `memory_semantic_recall`（bge-m3 + 精排） |
 | 每日衰减任务 | ✅ `decay_job.py`（低于阈值归档，支持 dry-run） |
 | 自动 ingest | ✅ `session_tail.py`（解压日志、过滤注入/reasoning、`turn_id` 去重；**仅白名单工作区**，默认 `D:\大肥鱼`） |
 | 自动心跳 | ✅ `auto_tick.py`（MCP 服务内 10 分钟：增量入库 + 刷新摘要 + stale 监控，不自动归档） |
@@ -34,7 +35,7 @@ cd D:\大肥鱼\MemoryService
 python -m unittest discover -s tests -v
 ```
 
-当前 43 项测试全过：存储 9、MCP 10、提取 5、衰减 5、摘要 2、日志入库 3、向量 5、心跳 2、备份 2。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要生成、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、每日摘要生成/读取。
+当前 46 项测试全过：存储 9、MCP 10、提取 5、衰减 5、摘要 2、日志入库 3、向量 5、心跳 2、备份 2、语义召回 3。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要生成、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、每日摘要生成/读取。
 
 ## 关键约束（写进代码，不靠自觉）
 

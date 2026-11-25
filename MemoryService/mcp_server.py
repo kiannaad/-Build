@@ -18,7 +18,9 @@ import auto_tick  # noqa: E402
 import db  # noqa: E402
 import decay_job  # noqa: E402
 import digest  # noqa: E402
+import embeddings  # noqa: E402
 import extractor  # noqa: E402
+import semantic  # noqa: E402
 
 SERVER_INFO = {"name": "dafeiyu-memory", "version": "0.1.0"}
 PROTOCOL = "2024-11-05"
@@ -94,6 +96,26 @@ TOOLS = [
                 "source_platform": {"type": "string"},
             },
             "required": ["turn_id", "text"],
+        },
+    },
+    {
+        "name": "memory_embed",
+        "description": "为缺少向量的记忆补嵌入（Ollama，默认 bge-m3）。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"limit": {"type": "integer", "minimum": 1, "maximum": 1000, "default": 200}},
+        },
+    },
+    {
+        "name": "memory_semantic_recall",
+        "description": "语义召回：向量相似度 + 重要度/置信度/保持率精排。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string"},
+                "limit": {"type": "integer", "minimum": 1, "maximum": 20, "default": 4},
+            },
+            "required": ["query"],
         },
     },
     {
@@ -248,6 +270,21 @@ def call_tool(name: str, args: dict) -> dict:
             )
             candidates = extractor.extract_from_event(conn, event_id)
             return _text({"event_id": event_id, "created": created, "candidate_ids": candidates})
+        if name == "memory_embed":
+            embedder = embeddings.OllamaEmbedder(
+                os.environ.get("DFY_EMBED_MODEL", "bge-m3"),
+                os.environ.get("DFY_OLLAMA_URL", "http://127.0.0.1:11434"),
+            )
+            return _text({"embedded": semantic.embed_all(conn, embedder, limit=int(args.get("limit", 200)))})
+        if name == "memory_semantic_recall":
+            embedder = embeddings.OllamaEmbedder(
+                os.environ.get("DFY_EMBED_MODEL", "bge-m3"),
+                os.environ.get("DFY_OLLAMA_URL", "http://127.0.0.1:11434"),
+            )
+            hits = semantic.semantic_recall(
+                conn, str(args["query"]), embedder, limit=int(args.get("limit", 4)),
+            )
+            return _text({"hits": hits})
         if name == "memory_stats":
             return _text(db.stats(conn))
         if name == "memory_restore":
