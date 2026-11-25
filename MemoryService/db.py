@@ -317,6 +317,28 @@ def upsert_digest(
     conn.commit()
 
 
+def list_candidates(conn: sqlite3.Connection, *, limit: int = 20) -> list[dict]:
+    rows = conn.execute(
+        "SELECT id, kind, body, tags, importance, confidence, created_at FROM memories"
+        " WHERE status = 'candidate' ORDER BY created_at DESC LIMIT ?",
+        (limit,),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def reject_candidate(conn: sqlite3.Connection, memory_id: str, reason: str = "") -> None:
+    """拒绝候选：软删除（status=deleted），保留审计，可恢复。"""
+    now = utcnow()
+    cur = conn.execute(
+        "UPDATE memories SET status = 'deleted', updated_at = ? WHERE id = ? AND status = 'candidate'",
+        (now, memory_id),
+    )
+    if cur.rowcount == 0:
+        raise ValueError(f"没有可拒绝的候选: {memory_id}")
+    record_audit(conn, "reject", "memory", memory_id, {"reason": reason})
+    conn.commit()
+
+
 def propose_core(conn: sqlite3.Connection, *, body: str, reason: str = "") -> str:
     """新增一条 L4 核心记忆候选（proposed），必须再经 confirm 才生效。"""
     core_id = "core-" + uuid.uuid4().hex

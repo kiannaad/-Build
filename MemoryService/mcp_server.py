@@ -97,6 +97,23 @@ TOOLS = [
         },
     },
     {
+        "name": "memory_candidates",
+        "description": "列出待审的 L2 候选记忆。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"limit": {"type": "integer", "minimum": 1, "maximum": 50, "default": 20}},
+        },
+    },
+    {
+        "name": "memory_reject",
+        "description": "拒绝一条候选记忆（软删除，可恢复）。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {"memory_id": {"type": "string"}, "reason": {"type": "string"}},
+            "required": ["memory_id"],
+        },
+    },
+    {
         "name": "memory_promote",
         "description": "把候选记忆提升为 active；应在用户确认后调用。",
         "inputSchema": {
@@ -217,6 +234,11 @@ def call_tool(name: str, args: dict) -> dict:
             )
             candidates = extractor.extract_from_event(conn, event_id)
             return _text({"event_id": event_id, "created": created, "candidate_ids": candidates})
+        if name == "memory_candidates":
+            return _text({"entries": db.list_candidates(conn, limit=int(args.get("limit", 20)))})
+        if name == "memory_reject":
+            db.reject_candidate(conn, str(args["memory_id"]), str(args.get("reason", "")))
+            return _text({"ok": True, "memory_id": args["memory_id"], "status": "deleted"})
         if name == "memory_promote":
             db.set_memory_status(conn, str(args["memory_id"]), "active", str(args.get("reason", "confirmed")))
             return _text({"ok": True, "memory_id": args["memory_id"], "status": "active"})
