@@ -20,7 +20,11 @@ class ReportIndexTest(unittest.TestCase):
             "# 日报\n\n### BV1AAA\n- 标题：第一条\n\n### BV1BBB\n- 标题：第二条\n", encoding="utf-8",
         )
         (self.douyin / "2026-11-24.md").write_text(
-            "# 日报\n\n### 7300000000000000000\n- 标题：抖音条目\n", encoding="utf-8",
+            "# 日报\n\n### 7300000000000000000\n**抖音条目** · @作者 · 30 秒\n", encoding="utf-8",
+        )
+        # 中间产物不应被当成日报
+        (self.douyin / "forward-20261125-1758.md").write_text(
+            "# 转发清单\n\n### 7300000000000000001\n- 标题：中间产物\n", encoding="utf-8",
         )
 
     def tearDown(self):
@@ -35,6 +39,7 @@ class ReportIndexTest(unittest.TestCase):
         self.assertIn("2026-11-24", text)
         self.assertIn("抖音", text)
         self.assertIn("抖音条目", text)
+        self.assertNotIn("中间产物", text)
 
     def test_empty_folders(self):
         out = report_index.build(self.root / "none1", self.root / "none2", self.root / "empty.md")

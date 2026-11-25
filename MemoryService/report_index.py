@@ -9,6 +9,7 @@ from pathlib import Path
 
 HEADING = re.compile(r"^###\s+(BV[0-9A-Za-z]+|\d{6,})")
 TITLE = re.compile(r"^-\s*标题[：:]\s*(.+)$")
+TITLE_DOUYIN = re.compile(r"^\*\*(.+?)\*\*\s*·")
 
 
 def scan(folder: Path, platform: str) -> list[dict]:
@@ -16,6 +17,8 @@ def scan(folder: Path, platform: str) -> list[dict]:
         return []
     rows = []
     for path in sorted(folder.glob("*.md"), reverse=True):
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", path.stem):
+            continue  # 跳过 forward-*.md 等中间产物
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
         except OSError:
@@ -29,7 +32,8 @@ def scan(folder: Path, platform: str) -> list[dict]:
                 items.append(current)
                 continue
             if current and not current["title"]:
-                t = TITLE.match(line.strip())
+                stripped = line.strip()
+                t = TITLE.match(stripped) or TITLE_DOUYIN.match(stripped)
                 if t:
                     current["title"] = t.group(1).strip()
         rows.append({
