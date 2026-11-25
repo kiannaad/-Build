@@ -339,6 +339,21 @@ def reject_candidate(conn: sqlite3.Connection, memory_id: str, reason: str = "")
     conn.commit()
 
 
+def stats(conn: sqlite3.Connection) -> dict:
+    """轻量状态：各层计数，用于自检与聊天里查看。"""
+    def grouped(table: str, column: str = "status") -> dict:
+        rows = conn.execute(f"SELECT {column} AS k, COUNT(*) AS n FROM {table} GROUP BY {column}").fetchall()
+        return {r["k"]: r["n"] for r in rows}
+
+    return {
+        "events": conn.execute("SELECT COUNT(*) AS n FROM events").fetchone()["n"],
+        "memories": grouped("memories"),
+        "core": grouped("core_memories"),
+        "digests": conn.execute("SELECT COUNT(*) AS n FROM daily_digests").fetchone()["n"],
+        "audit": conn.execute("SELECT COUNT(*) AS n FROM memory_audit").fetchone()["n"],
+    }
+
+
 def restore_memory(conn: sqlite3.Connection, memory_id: str, reason: str = "") -> None:
     """把 deleted / archived 的记忆恢复为 candidate，重新进入审核。"""
     now = utcnow()

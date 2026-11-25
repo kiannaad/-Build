@@ -97,6 +97,11 @@ TOOLS = [
         },
     },
     {
+        "name": "memory_stats",
+        "description": "查看记忆库状态：事件数、各状态记忆数、核心记忆、摘要与审计计数。",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
         "name": "memory_restore",
         "description": "把已删除或已归档的记忆恢复为候选，重新进入审核。",
         "inputSchema": {
@@ -243,6 +248,8 @@ def call_tool(name: str, args: dict) -> dict:
             )
             candidates = extractor.extract_from_event(conn, event_id)
             return _text({"event_id": event_id, "created": created, "candidate_ids": candidates})
+        if name == "memory_stats":
+            return _text(db.stats(conn))
         if name == "memory_restore":
             db.restore_memory(conn, str(args["memory_id"]), str(args.get("reason", "")))
             return _text({"ok": True, "memory_id": args["memory_id"], "status": "candidate"})

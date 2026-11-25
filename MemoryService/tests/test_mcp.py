@@ -65,7 +65,7 @@ class McpServerTest(unittest.TestCase):
             "memory_ingest", "memory_promote", "memory_decay",
             "memory_core_propose", "memory_core_confirm", "memory_core_list",
             "memory_digest_generate", "memory_digest_get", "memory_tick",
-            "memory_candidates", "memory_reject", "memory_restore",
+            "memory_candidates", "memory_reject", "memory_restore", "memory_stats",
         })
 
     def test_recall_and_forget(self):
@@ -82,6 +82,15 @@ class McpServerTest(unittest.TestCase):
         self.assertTrue(json.loads(responses[1]["result"]["content"][0]["text"])["ok"])
         third = json.loads(responses[2]["result"]["content"][0]["text"])
         self.assertEqual(third["hits"], [])
+
+    def test_stats(self):
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_stats", "arguments": {}}},
+        ])
+        stats = json.loads(responses[0]["result"]["content"][0]["text"])
+        self.assertEqual(stats["events"], 1)
+        self.assertEqual(stats["memories"].get("active"), 1)
 
     def test_restore_rejected_candidate(self):
         responses = self._run([
