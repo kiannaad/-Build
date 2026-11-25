@@ -15,7 +15,7 @@ import json
 import math
 import sqlite3
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
@@ -337,6 +337,23 @@ def reject_candidate(conn: sqlite3.Connection, memory_id: str, reason: str = "")
         raise ValueError(f"没有可拒绝的候选: {memory_id}")
     record_audit(conn, "reject", "memory", memory_id, {"reason": reason})
     conn.commit()
+
+
+def purge_deleted(conn: sqlite3.Connection, *, older_than_days: float = 30, now: datetime | None = None) -> list[str]:
+    """物理清除超过保留期的 deleted 记忆（含来源关联与向量）。"""
+    now = now or datetime.now(timezone.utc)
+    cutoff = (now - timedelta(days=max(0.0, older_than_days))).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    rows = conn.execute(
+        "SELECT id FROM memories WHERE status = 'deleted' AND updated_at < ?", (cutoff,)
+    ).fetchall()
+    ids = [r["id"] for r in rows]
+    for memory_id in ids:
+        conn.execute("DELETE FROM memories WHERE id = ?", (memory_id,))
+    if ids:
+        record_audit(conn, "purge_deleted", "memory", None,
+                     {"count": len(ids), "ids": ids, "older_than_days": older_than_days})
+        conn.commit()
+    return ids
 
 
 def stats(conn: sqlite3.Connection) -> dict:

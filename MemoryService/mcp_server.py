@@ -119,6 +119,17 @@ TOOLS = [
         },
     },
     {
+        "name": "memory_purge",
+        "description": "物理清除超过保留期的 deleted 记忆；必须 confirm=true。",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "older_than_days": {"type": "number", "minimum": 0, "default": 30},
+                "confirm": {"type": "boolean", "default": False},
+            },
+        },
+    },
+    {
         "name": "memory_stats",
         "description": "查看记忆库状态：事件数、各状态记忆数、核心记忆、摘要与审计计数。",
         "inputSchema": {"type": "object", "properties": {}},
@@ -285,6 +296,11 @@ def call_tool(name: str, args: dict) -> dict:
                 conn, str(args["query"]), embedder, limit=int(args.get("limit", 4)),
             )
             return _text({"hits": hits})
+        if name == "memory_purge":
+            if args.get("confirm") is not True:
+                raise ValueError("memory_purge 需要 confirm=true")
+            ids = db.purge_deleted(conn, older_than_days=float(args.get("older_than_days", 30)))
+            return _text({"purged": len(ids), "ids": ids})
         if name == "memory_stats":
             return _text(db.stats(conn))
         if name == "memory_restore":

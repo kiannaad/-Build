@@ -1,5 +1,6 @@
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 import tempfile
@@ -66,7 +67,7 @@ class McpServerTest(unittest.TestCase):
             "memory_core_propose", "memory_core_confirm", "memory_core_list",
             "memory_digest_generate", "memory_digest_get", "memory_tick",
             "memory_candidates", "memory_reject", "memory_restore", "memory_stats",
-            "memory_embed", "memory_semantic_recall",
+            "memory_embed", "memory_semantic_recall", "memory_purge",
         })
 
     def test_recall_and_forget(self):
@@ -83,6 +84,35 @@ class McpServerTest(unittest.TestCase):
         self.assertTrue(json.loads(responses[1]["result"]["content"][0]["text"])["ok"])
         third = json.loads(responses[2]["result"]["content"][0]["text"])
         self.assertEqual(third["hits"], [])
+
+    def test_purge_requires_confirm_and_removes_old_deleted(self):
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_ingest",
+                        "arguments": {"turn_id": "purge-1", "text": "我喜欢喝乌龙茶。"}}},
+        ])
+        candidate = json.loads(responses[0]["result"]["content"][0]["text"])["candidate_ids"][0]
+        self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_reject", "arguments": {"memory_id": candidate}}},
+        ])
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("UPDATE memories SET updated_at='2020-01-01T00:00:00.000Z' WHERE id=?", (candidate,))
+        conn.commit()
+        conn.close()
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_purge", "arguments": {}}},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "memory_purge", "arguments": {"confirm": True}}},
+            {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+             "params": {"name": "memory_purge", "arguments": {"confirm": True}}},
+        ])
+        self.assertIn("error", responses[0])
+        first = json.loads(responses[1]["result"]["content"][0]["text"])
+        second = json.loads(responses[2]["result"]["content"][0]["text"])
+        self.assertEqual(first["purged"], 1)
+        self.assertEqual(second["purged"], 0)
 
     def test_stats(self):
         responses = self._run([
