@@ -72,6 +72,21 @@ class EmbeddingsTest(unittest.TestCase):
         # restricted 不发送给嵌入服务，因此永远没有向量
         self.assertNotIn(secret_id, embeddings.load_embeddings(self.conn, self.embedder.model))
 
+    def test_large_set_uses_vectorized_path(self):
+        eid = self.conn.execute("SELECT id FROM events LIMIT 1").fetchone()["id"]
+        for i in range(40):
+            body = f"批量记忆{i} 猫茶狗"
+            db.add_memory(
+                self.conn, kind="user_preference", body=body, source_event_ids=[eid],
+                fact_owner="explicit_user", status="active",
+            )
+        embeddings.embed_missing(self.conn, self.embedder)
+        hits = embeddings.semantic_candidates(
+            self.conn, query_vec=[1.0, 0.0, 0.0], model=self.embedder.model, limit=5,
+        )
+        self.assertEqual(len(hits), 5)
+        self.assertTrue(all(0.0 <= sim <= 1.0001 for _, sim in hits))
+
     def test_model_isolation(self):
         embeddings.embed_missing(self.conn, self.embedder)
         self.assertEqual(embeddings.load_embeddings(self.conn, "another-model"), {})

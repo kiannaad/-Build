@@ -101,8 +101,33 @@ def semantic_candidates(
     allowed = {
         r["id"] for r in rows if include_restricted or r["sensitivity"] != "restricted"
     }
+    try:
+        import numpy as np
+    except ImportError:
+        np = None
+    if np is not None and len(allowed) >= 32:
+        sql = (
+            "SELECT e.memory_id, e.vector FROM memory_embeddings e"
+            " JOIN memories m ON m.id = e.memory_id"
+            " WHERE e.model = ? AND m.status = 'active'"
+        )
+        if not include_restricted:
+            sql += " AND m.sensitivity != 'restricted'"
+        rows = conn.execute(sql, (model,)).fetchall()
+        if rows:
+            ids = [r["memory_id"] for r in rows]
+            mat = np.stack([np.frombuffer(r["vector"], dtype=np.float32) for r in rows])
+            query = np.asarray(query_vec, dtype=np.float32)
+            if mat.ndim == 2 and query.ndim == 1 and mat.shape[1] == query.shape[0]:
+                denom = np.linalg.norm(mat, axis=1) * np.linalg.norm(query)
+                sims = np.divide(mat @ query, denom, out=np.zeros(len(ids), dtype=np.float32), where=denom > 0)
+                order = np.argsort(-sims)[:limit]
+                return [(ids[int(i)], float(sims[int(i)])) for i in order]
     vectors = load_embeddings(conn, model)
-    scored = [(mid, cosine(query_vec, vec)) for mid, vec in vectors.items() if mid in allowed]
+    ids = [mid for mid in vectors if mid in allowed]
+    if not ids:
+        return []
+    scored = [(mid, cosine(query_vec, vectors[mid])) for mid in ids]
     scored.sort(key=lambda x: x[1], reverse=True)
     return scored[:limit]
 
