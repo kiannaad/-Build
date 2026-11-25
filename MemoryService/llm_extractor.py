@@ -48,7 +48,11 @@ def parse_items(raw: str) -> list[dict]:
     except (TypeError, ValueError):
         return []
     if isinstance(data, dict):
-        data = data.get("memories") or data.get("items") or []
+        # 小模型在 format=json 下常直接返回单个对象，而不是数组
+        if "body" in data and "kind" in data:
+            data = [data]
+        else:
+            data = data.get("memories") or data.get("items") or []
     if not isinstance(data, list):
         return []
     out = []

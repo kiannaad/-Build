@@ -45,6 +45,13 @@ class LlmExtractorTest(unittest.TestCase):
         self.assertTrue(all(r["status"] == "candidate" for r in rows))
         self.assertTrue(all(r["tags"] == "model-extract" for r in rows))
 
+    def test_single_object_output(self):
+        created = llm_extractor.extract_with_model(
+            self.conn, event_id=self.user_event,
+            call_model=lambda prompt: '{"body": "最近在学吉他", "kind": "interest", "importance": 3, "confidence": 0.8}',
+        )
+        self.assertEqual(len(created), 1)
+
     def test_malformed_output_returns_empty(self):
         created = llm_extractor.extract_with_model(
             self.conn, event_id=self.user_event, call_model=lambda prompt: "不是 JSON",

@@ -124,7 +124,10 @@ TOOLS = [
         "description": "用本地 chat 模型从一条 L3 事件提取候选；需配置 DFY_CHAT_MODEL。",
         "inputSchema": {
             "type": "object",
-            "properties": {"event_id": {"type": "string"}},
+            "properties": {
+                "event_id": {"type": "string"},
+                "model": {"type": "string", "description": "本地 Ollama chat 模型名；留空用 DFY_CHAT_MODEL"},
+            },
             "required": ["event_id"],
         },
     },
@@ -307,7 +310,7 @@ def call_tool(name: str, args: dict) -> dict:
             )
             return _text({"hits": hits})
         if name == "memory_extract_model":
-            model = os.environ.get("DFY_CHAT_MODEL", "").strip()
+            model = str(args.get("model") or os.environ.get("DFY_CHAT_MODEL", "")).strip()
             if not model:
                 raise ValueError("未配置 DFY_CHAT_MODEL（本地 Ollama chat 模型名）")
             call_model = llm_extractor.ollama_call_model(
