@@ -27,7 +27,7 @@
 | 每日衰减任务 | ✅ `decay_job.py`（低于阈值归档，支持 dry-run） |
 | 自动 ingest | ✅ `session_tail.py`（解压日志、过滤注入/reasoning、`turn_id` 去重；**仅白名单工作区**，默认 `D:\大肥鱼`） |
 | 自动心跳 | ✅ `auto_tick.py`（MCP 服务内 10 分钟：增量入库 + 刷新摘要 + stale 监控，不自动归档） |
-| 备份 | ✅ `backup.py`（create / verify / restore；完整性校验、拒绝静默覆盖） |
+| 备份 | ✅ `backup.py`（create / verify / restore；心跳每天自动一份，保留 7 份） |
 | 旧库迁移脚本 | ⬜ 未开始 |
 
 ## 运行测试
@@ -37,7 +37,7 @@ cd D:\大肥鱼\MemoryService
 python -m unittest discover -s tests -v
 ```
 
-当前 59 项测试全过：存储 9、MCP 12、规则提取 5、模型提取 6、衰减 5、摘要 3、日志入库 3、向量 5、心跳 2、备份 4、语义召回 3、日报索引 2。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要生成、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、每日摘要生成/读取。
+当前 60 项测试全过：存储 9、MCP 12、规则提取 5、模型提取 6、衰减 5、摘要 3、日志入库 3、向量 5、心跳 2、备份 5、语义召回 3、日报索引 2。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要生成、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、每日摘要生成/读取。
 
 ## 关键约束（写进代码，不靠自觉）
 

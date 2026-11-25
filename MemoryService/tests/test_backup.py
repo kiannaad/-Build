@@ -1,4 +1,5 @@
 import json
+import os
 import sqlite3
 import sys
 import tempfile
@@ -72,6 +73,18 @@ class BackupTest(unittest.TestCase):
             self.assertEqual(conn.execute("SELECT COUNT(*) FROM events").fetchone()[0], 1)
         finally:
             conn.close()
+
+    def test_prune_keeps_recent(self):
+        target = self.root / "prune"
+        target.mkdir()
+        for i in range(4):
+            path = target / f"dafeiyu-2026010{i}-000000.zip"
+            path.write_bytes(b"x")
+            os.utime(path, (i + 1, i + 1))
+        removed = backup.prune(target, keep=2)
+        self.assertEqual(len(removed), 2)
+        remaining = {p.name for p in backup.list_backups(target)}
+        self.assertEqual(remaining, {"dafeiyu-20260102-000000.zip", "dafeiyu-20260103-000000.zip"})
 
     def test_restore_refuses_overwrite_without_force(self):
         out = backup.create(

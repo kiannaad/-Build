@@ -95,6 +95,27 @@ def verify(zip_path: Path) -> dict:
     return manifest
 
 
+def list_backups(target: Path | None = None) -> list[Path]:
+    target = target or DEFAULT_TARGET
+    if not target.exists():
+        return []
+    return sorted(target.glob("dafeiyu-*.zip"), key=lambda p: p.stat().st_mtime, reverse=True)
+
+
+def prune(target: Path | None = None, *, keep: int = 7) -> list[Path]:
+    """只保留最近 keep 份备份，返回被删除的路径。"""
+    keep = max(1, int(keep))
+    backups = list_backups(target)
+    removed = []
+    for path in backups[keep:]:
+        try:
+            path.unlink()
+            removed.append(path)
+        except OSError:
+            pass
+    return removed
+
+
 def restore(
     zip_path: Path,
     *,

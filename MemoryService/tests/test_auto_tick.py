@@ -15,14 +15,17 @@ class AutoTickTest(unittest.TestCase):
                                return_value={"files": 2, "new_events": 5}) as run, \
              mock.patch.object(auto_tick.db, "init_db") as init_db, \
              mock.patch.object(auto_tick.digest, "generate") as gen, \
-             mock.patch.object(auto_tick.decay_job, "archive_stale", return_value=[{"id": "m1"}]) as decay:
+             mock.patch.object(auto_tick.decay_job, "archive_stale", return_value=[{"id": "m1"}]) as decay, \
+             mock.patch.object(auto_tick, "_ensure_daily_backup", return_value=None) as backup_mock:
             init_db.return_value = mock.MagicMock()
             result = auto_tick.tick_once()
         run.assert_called_once()
         gen.assert_called_once()
         decay.assert_called_once()
+        backup_mock.assert_called_once()
         self.assertEqual(result["ingest"]["new_events"], 5)
         self.assertEqual(result["stale"], 1)
+        self.assertIsNone(result["backup"])
         self.assertRegex(result["digest_day"], r"^\d{4}-\d{2}-\d{2}$")
 
     def test_start_can_be_disabled(self):

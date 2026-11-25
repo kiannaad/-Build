@@ -13,12 +13,26 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+import backup
 import db
 import decay_job
 import digest
 import session_tail
 
 DEFAULT_INTERVAL_MIN = 10
+
+
+def _ensure_daily_backup() -> Path | None:
+    """每天最多一份备份；成功后只保留最近 N 份。"""
+    if os.environ.get("DFY_AUTO_BACKUP", "1") == "0":
+        return None
+    target = Path(os.environ.get("DFY_BACKUP_DIR") or r"D:\大肥鱼\Backups")
+    today = datetime.now().strftime("%Y%m%d")
+    if any(p.name.startswith(f"dafeiyu-{today}-") for p in backup.list_backups(target)):
+        return None
+    path = backup.create(target)
+    backup.prune(target, keep=int(os.environ.get("DFY_BACKUP_KEEP", "7")))
+    return path
 
 
 def tick_once() -> dict:
@@ -31,7 +45,17 @@ def tick_once() -> dict:
         stale = decay_job.archive_stale(conn, dry_run=True)
     finally:
         conn.close()
-    return {"ingest": ingest, "digest_day": today, "stale": len(stale)}
+    backup_path = None
+    try:
+        backup_path = _ensure_daily_backup()
+    except Exception as exc:  # 备份失败不影响记忆入库
+        print(f"[auto-tick] backup failed: {type(exc).__name__}: {exc}", file=sys.stderr, flush=True)
+    return {
+        "ingest": ingest,
+        "digest_day": today,
+        "stale": len(stale),
+        "backup": str(backup_path) if backup_path else None,
+    }
 
 
 def _loop(interval_seconds: int) -> None:
