@@ -38,7 +38,7 @@ cd D:\大肥鱼\MemoryService
 python -m unittest discover -s tests -v
 ```
 
-当前 65 项测试全过：存储 10、MCP 12、规则提取 5、模型提取 6、衰减 5、摘要 3、日志入库 3、向量 6、心跳 2、备份 5、语义召回 3、日报索引 2、笔记导入 3。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要生成、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、每日摘要生成/读取。
+当前 66 项测试全过：存储 10、MCP 13、规则提取 5、模型提取 6、衰减 5、摘要 3、日志入库 3、向量 6、心跳 2、备份 5、语义召回 3、日报索引 2、笔记导入 3。覆盖事件幂等、来源强制、中文召回、归档/恢复、遗忘、衰减与强化、敏感排除、摘要生成、审计、MCP 调用、ingest→promote→recall、core propose→confirm→recall、decay dry-run→apply、每日摘要生成/读取。
 
 ## 关键约束（写进代码，不靠自觉）
 

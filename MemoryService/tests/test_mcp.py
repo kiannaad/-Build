@@ -86,6 +86,31 @@ class McpServerTest(unittest.TestCase):
         third = json.loads(responses[2]["result"]["content"][0]["text"])
         self.assertEqual(third["hits"], [])
 
+    def test_restricted_memory_only_with_include_flag(self):
+        conn = sqlite3.connect(self.db_path)
+        event_id = conn.execute("SELECT id FROM events LIMIT 1").fetchone()[0]
+        conn.close()
+        self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_remember", "arguments": {
+                 "kind": "relationship", "body": "敏感测试记忆",
+                 "source_event_ids": [event_id], "sensitivity": "restricted",
+                 "status": "active",
+             }}},
+        ])
+        responses = self._run([
+            {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "memory_recall", "arguments": {"query": "敏感测试"}}},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+             "params": {"name": "memory_recall", "arguments": {
+                 "query": "敏感测试", "include_restricted": True,
+             }}},
+        ])
+        without = json.loads(responses[0]["result"]["content"][0]["text"])["hits"]
+        with_flag = json.loads(responses[1]["result"]["content"][0]["text"])["hits"]
+        self.assertEqual(without, [])
+        self.assertTrue(any("敏感测试记忆" in h["body"] for h in with_flag))
+
     def test_model_extract_requires_chat_model_config(self):
         conn = sqlite3.connect(self.db_path)
         event_id = conn.execute("SELECT id FROM events LIMIT 1").fetchone()[0]

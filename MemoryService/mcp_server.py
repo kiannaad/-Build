@@ -43,6 +43,10 @@ TOOLS = [
             "properties": {
                 "query": {"type": "string"},
                 "limit": {"type": "integer", "minimum": 1, "maximum": 20, "default": 6},
+                "include_restricted": {
+                    "type": "boolean", "default": False,
+                    "description": "仅在用户明确问起敏感内容时使用；默认排除",
+                },
             },
             "required": ["query"],
         },
@@ -256,7 +260,12 @@ def call_tool(name: str, args: dict) -> dict:
     conn = db.init_db(db_path())
     try:
         if name == "memory_recall":
-            return _text({"hits": db.recall(conn, str(args.get("query", "")), limit=int(args.get("limit", 6)))})
+            return _text({"hits": db.recall(
+                conn,
+                str(args.get("query", "")),
+                limit=int(args.get("limit", 6)),
+                include_restricted=bool(args.get("include_restricted", False)),
+            )})
         if name == "memory_remember":
             memory_id = db.add_memory(
                 conn,
