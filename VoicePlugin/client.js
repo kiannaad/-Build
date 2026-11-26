@@ -410,7 +410,20 @@ window.__ModuleLoader__.load({
         }
         return { text, time };
       }, [snapshot, turn]);
-      const segments = useMemo(() => parseVoiceSegments(source.text), [source.text]);
+      const latestTurn = useMemo(() => {
+        const order = snapshot && snapshot.timeline && snapshot.timeline.turnOrder;
+        return Array.isArray(order) && order.length ? order[order.length - 1] : undefined;
+      }, [snapshot]);
+      const segments = useMemo(() => {
+        const explicit = parseVoiceSegments(source.text);
+        if (explicit.length) return explicit;
+        // 兜底：最新一条短回复自动生成气泡，避免模型漏写协议。
+        if (turn !== latestTurn) return [];
+        if (!source.text || source.text.length > 220) return [];
+        if (!source.time || source.time < STARTED_AT) return [];
+        if (/```|^\s*\|/.test(source.text)) return [];
+        return [{ emotion: 'neutral', text: source.text }];
+      }, [source.text, source.time, turn, latestTurn]);
       if (!segments.length) return null;
       return h('div', {
         style: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', margin: '4px 0 6px' },
