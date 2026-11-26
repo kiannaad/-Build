@@ -5,6 +5,7 @@
 - 主页：`index.html`（3d-force-graph / ThreeJS，WebGL）
 - 退路：`index-2d.html`（零依赖 Canvas 版，仍可打开）
 - 图库：`vendor/3d-force-graph.min.js`（1.80.2，离线，1.33MB）
+- 特效层：`#dust`（背景星海/银河尘埃）+ `#glow`（节点光晕），Canvas 2D + `screen` 混合
 
 ## 运行
 

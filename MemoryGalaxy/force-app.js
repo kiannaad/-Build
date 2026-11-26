@@ -54,6 +54,25 @@
   let byId = new Map();
   let labelEntries = [];
   const labelLayer = document.getElementById('labels');
+  const dustCanvas = document.getElementById('dust');
+  const glowCanvas = document.getElementById('glow');
+  const dustCtx = dustCanvas.getContext('2d');
+  const glowCtx = glowCanvas.getContext('2d');
+  let fxW = 0;
+  let fxH = 0;
+  let fxStarted = false;
+  let dustStars = [];
+  let galaxyDust = [];
+  const NEBULAE = [
+    [0.50, 0.46, 0.34, [255, 128, 186], 0.15],
+    [0.42, 0.44, 0.22, [120, 196, 255], 0.11],
+    [0.60, 0.49, 0.20, [190, 140, 255], 0.10],
+    [0.50, 0.47, 0.12, [255, 225, 170], 0.22],
+  ];
+  const DUST_COLORS = [
+    [255, 244, 230], [255, 190, 215], [170, 210, 255],
+    [215, 190, 255], [255, 220, 170], [235, 245, 255],
+  ];
   const seeded = (id, salt = 0) => {
     let h = 2166136261;
     for (let i = 0; i < id.length; i++) {
@@ -72,6 +91,11 @@
     ? (KIND_COLORS[n.kind] || '#7cd8ff')
     : (KIND_COLORS[n.type] || '#9fb3d6');
   const idOf = (x) => (x && typeof x === 'object') ? x.id : x;
+  const rgba = (rgb, a) => `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${a})`;
+  const hexRgb = (hex) => {
+    const h = hex.replace('#', '');
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  };
 
   function visible(n) {
     if (n.type === 'core') return true;
@@ -399,6 +423,151 @@
     refreshStyle();
   }
 
+  function resizeFx() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    fxW = window.innerWidth;
+    fxH = window.innerHeight;
+    for (const c of [dustCanvas, glowCanvas]) {
+      c.width = Math.floor(fxW * dpr);
+      c.height = Math.floor(fxH * dpr);
+      c.style.width = fxW + 'px';
+      c.style.height = fxH + 'px';
+    }
+    dustCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    glowCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function buildDust() {
+    dustStars = [];
+    for (let i = 0; i < 1400; i++) {
+      dustStars.push({
+        x: Math.random(), y: Math.random(),
+        s: 0.35 + Math.random() * 1.4,
+        a: 0.12 + Math.random() * 0.6,
+        p: Math.random() * Math.PI * 2,
+        c: DUST_COLORS[Math.floor(Math.random() * DUST_COLORS.length)],
+      });
+    }
+    galaxyDust = [];
+    for (let i = 0; i < 4200; i++) {
+      const kind = i % 10;
+      const color = DUST_COLORS[Math.floor(Math.random() * DUST_COLORS.length)];
+      if (kind < 2) {
+        // 中央核球
+        const r = Math.pow(Math.random(), 2.1) * 0.13;
+        const a = Math.random() * Math.PI * 2;
+        galaxyDust.push({
+          x: 0.5 + Math.cos(a) * r * 1.0,
+          y: 0.47 + Math.sin(a) * r * 0.38,
+          s: 0.55 + Math.random() * 1.5,
+          a: 0.25 + Math.random() * 0.5,
+          c: color,
+        });
+      } else if (kind < 9) {
+        // 两条旋臂
+        const r = 0.045 + Math.pow(Math.random(), 0.68) * 0.52;
+        const arm = (i % 2) * Math.PI;
+        const a = arm + r * 10.5 + (Math.random() - 0.5) * 0.42;
+        galaxyDust.push({
+          x: 0.5 + Math.cos(a) * r * 1.0,
+          y: 0.47 + Math.sin(a) * r * 0.26 + (Math.random() - 0.5) * 0.018,
+          s: 0.35 + Math.random() * 1.1,
+          a: 0.10 + Math.random() * 0.42,
+          c: color,
+        });
+      } else {
+        // 弥散星晕
+        const a = Math.random() * Math.PI * 2;
+        const r = 0.18 + Math.random() * 0.46;
+        galaxyDust.push({
+          x: 0.5 + Math.cos(a) * r * 1.05,
+          y: 0.47 + Math.sin(a) * r * 0.42,
+          s: 0.25 + Math.random() * 0.8,
+          a: 0.06 + Math.random() * 0.2,
+          c: color,
+        });
+      }
+    }
+  }
+
+  function drawDust(t) {
+    if (!dustCtx || !fxW) return;
+    dustCtx.clearRect(0, 0, fxW, fxH);
+    dustCtx.globalCompositeOperation = 'lighter';
+
+    for (const [nx, ny, nr, rgb, alpha] of NEBULAE) {
+      const x = nx * fxW;
+      const y = ny * fxH;
+      const r = nr * Math.min(fxW, fxH);
+      const g = dustCtx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, rgba(rgb, alpha));
+      g.addColorStop(0.35, rgba(rgb, alpha * 0.45));
+      g.addColorStop(1, rgba(rgb, 0));
+      dustCtx.fillStyle = g;
+      dustCtx.fillRect(0, 0, fxW, fxH);
+    }
+
+    for (const s of dustStars) {
+      const tw = 0.72 + 0.28 * Math.sin(t * 0.0009 + s.p);
+      dustCtx.fillStyle = rgba(s.c, s.a * tw);
+      dustCtx.fillRect(s.x * fxW, s.y * fxH, s.s, s.s);
+    }
+
+    const spin = t * 0.000008;
+    for (const d of galaxyDust) {
+      // 只做极慢的整体位移，避免每帧重算旋臂
+      const dx = Math.cos(spin) * (d.x - 0.5) - Math.sin(spin) * (d.y - 0.47) * 0.25;
+      const dy = Math.sin(spin) * (d.x - 0.5) * 0.25 + Math.cos(spin) * (d.y - 0.47);
+      dustCtx.fillStyle = rgba(d.c, d.a);
+      dustCtx.fillRect((0.5 + dx) * fxW, (0.47 + dy) * fxH, d.s, d.s);
+    }
+    dustCtx.globalCompositeOperation = 'source-over';
+  }
+
+  function drawGlows(t) {
+    if (!glowCtx || !fxW || !Graph) return;
+    glowCtx.clearRect(0, 0, fxW, fxH);
+    glowCtx.globalCompositeOperation = 'lighter';
+    for (const n of nodes) {
+      if (!visible(n) || n.x == null) continue;
+      let p = null;
+      try { p = Graph.graph2ScreenCoords(n.x, n.y, n.z); } catch { /* ignore */ }
+      if (!p || p.x < -100 || p.y < -100 || p.x > fxW + 100 || p.y > fxH + 100) continue;
+      const selected = state.selected === n;
+      const hovered = state.hover === n;
+      let radius;
+      if (n.type === 'core') radius = 110;
+      else if (n.type === 'memory') radius = 22 + (n.importance || 3) * 9;
+      else if (n.type === 'tag') radius = 30;
+      else if (n.type === 'digest') radius = 26;
+      else radius = 9;
+      if (selected || hovered) radius *= 1.35;
+      const rgb = hexRgb(colorOf(n));
+      const g = glowCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, radius);
+      g.addColorStop(0, rgba(rgb, selected ? 0.5 : 0.28));
+      g.addColorStop(0.25, rgba(rgb, selected ? 0.22 : 0.12));
+      g.addColorStop(1, rgba(rgb, 0));
+      glowCtx.fillStyle = g;
+      glowCtx.beginPath();
+      glowCtx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      glowCtx.fill();
+    }
+    glowCtx.globalCompositeOperation = 'source-over';
+  }
+
+  function startFx() {
+    if (fxStarted) return;
+    fxStarted = true;
+    resizeFx();
+    buildDust();
+    const loop = (t) => {
+      drawDust(t);
+      drawGlows(t);
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
+
   function ensureLabels() {
     labelLayer.innerHTML = '';
     labelEntries = nodes
@@ -495,8 +664,10 @@
       buildGraph();
       Graph.graphData({ nodes, links: edges });
       ensureLabels();
+      startFx();
       buildChips();
       bindUi();
+      window.addEventListener('resize', resizeFx);
       const m = data.meta || {};
       subtitle.textContent = `${m.memory_count || 0} 颗记忆星 · ${m.event_count || 0} 粒事件尘 · ${m.tag_count || 0} 个标签 · ${m.digest_count || 0} 份日摘要`;
       window.__GALAXY_DEBUG__ = { Graph, state, nodes, edges, selectNode, applyFilters, visible };
