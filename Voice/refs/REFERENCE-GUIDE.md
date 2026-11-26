@@ -28,6 +28,24 @@ A young adult female Mandarin voice, clearly female, warm and soft, medium-low p
 普通话，明确的女声，青年女性（20–30 岁感），温柔偏软的中低音，女声里偏低但不压成男声；像跟熟人聊天，不像播音或客服；语速自然稍慢，句尾放松，带一点笑意；近场录音，干声，无混响、无背景音乐、无其他人声；吐字清楚，音量稳定；不要幼态、不要甜腻、不要夸张，也不要刻意做成御姐音。
 ```
 
+## 2.1 活泼版 Voice Design 提示词（优先试这个）
+
+目标不是“甜妹”，是**有点皮的年轻女生**：明亮、带笑、语速稍快，但不尖、不嗲、不幼态。
+
+### 英文
+
+```text
+A young adult female Mandarin voice, bright and lively, light and clear timbre, playful smile in the voice, buoyant conversational energy, slightly faster pace, upward sentence endings, crisp articulation, close-mic studio recording, dry signal, no reverb, no background music, no broadcast or customer-service tone, not childish, not anime, not overly sweet, not shouty, stable volume.
+```
+
+### 中文
+
+```text
+普通话，青年女声，明亮清透，带笑意，语速稍快，句尾轻轻上扬；像忍不住跟你分享一件小事，活泼但不吵；近场录音，干声，无混响、无背景音乐；不要幼态、不要动漫腔、不要甜腻、不要喊，音量稳定。
+```
+
+先在 BreezeBlue 里试 **「邻家暖心」** 这个现成音色；它比「独居的猫语者」更日常、更有精神。现成的不够，再用上面的提示词设计。
+
 ## 3. 参考文本
 
 一条一句，每句 5–10 秒；同一音色、同一语速、同一麦克风距离。
@@ -39,6 +57,19 @@ A young adult female Mandarin voice, clearly female, warm and soft, medium-low p
 | `happy.wav` | 轻快 | 你回来啦。我刚还在想，今天要不要偷偷多吃一块小饼干。 | 轻快一点，带笑意，不要兴奋过头。 |
 | `tender.wav` | 温柔 | 先歇一会儿吧。事情做不完也没关系，我陪你坐一会儿。 | 放轻、放慢，像哄人休息；不要甜腻。 |
 | `sad.wav` | 低落 | 其实我也有点闷。不过没关系，今天不想说话的话，我们就安静待着。 | 低一点、慢一点，不哭腔；像承认自己也有点闷。 |
+
+## 3.1 活泼版参考文本
+
+如果决定换活泼音色，建议重新生成这 5 条，**不要只改 happy**；默认音色由 `neutral.wav` 决定，它要是平的，整体还是会显得安静。
+
+| 文件 | 情绪 | 文本 | 风格指令 |
+| --- | --- | --- | --- |
+| `neutral.wav` | 明亮平静 | 嗯，我在呀。今天怎么样？慢慢说，我听着呢。 | 轻快、带笑，像熟人打招呼，不要喊。 |
+| `neutral_2.wav` | 明亮补音素 | 今天早上有点凉，我把窗户关小了一点，又给自己倒了杯温水。 | 比平时稍微有精神一点，不要念课文。 |
+| `happy.wav` | 开心 | 你回来啦！我刚还在想，今天要不要偷偷多吃一块小饼干。 | 更兴奋一点，但别尖叫。 |
+| `playful.wav` | 调皮 | 才没有偷吃。……好吧，就一小口，别告诉别人。 | 带点得意和小狡黠，尾音上扬。 |
+| `tender.wav` | 温柔 | 先歇一会儿吧，事情做不完也没关系，我陪你。 | 收一点，但不要变成另一个声音。 |
+| `sad.wav` | 低落 | 其实我也有点闷。不过没关系，今天不想说话的话，我们就安静待着。 | 低一点、慢一点，不哭腔。 |
 
 ## 4. BreezeBlue 操作顺序
 
