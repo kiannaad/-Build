@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>大肥鱼 · 记忆星河（2D版）</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="sky" aria-label="大肥鱼记忆星河"></canvas>
+
+  <header class="hud">
+    <div class="title-row">
+      <div>
+        <h1>记忆星河</h1>
+        <p class="subtitle" id="subtitle">正在点亮…</p>
+      </div>
+      <div class="view-links">
+        <a class="switch" href="index.html">3D 版</a>
+        <span class="live-dot" title="本地只读"></span>
+      </div>
+    </div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="搜一条记忆、一个标签…" autocomplete="off">
+      <button id="reset" type="button" title="重置视角与筛选">重置</button>
+    </div>
+    <div class="chips" id="chips"></div>
+  </header>
+
+  <aside id="panel" class="panel" aria-live="polite">
+    <button id="close" class="close" type="button" aria-label="关闭详情">×</button>
+    <div id="panel-body">
+      <p class="empty">点一颗星，看看它记得什么。</p>
+    </div>
+  </aside>
+
+  <div class="legend">
+    <span><i class="dot core"></i>核心</span>
+    <span><i class="dot memory"></i>记忆</span>
+    <span><i class="dot event"></i>事件</span>
+    <span><i class="dot tag"></i>标签</span>
+  </div>
+
+  <footer class="hint">拖拽旋转 · 滚轮缩放 · 点击星星查看记忆</footer>
+  <div id="loader" class="loader">正在点亮记忆…</div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -64,10 +64,26 @@ h1 {
   letter-spacing: .03em;
 }
 
+.view-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  flex: none;
+}
+.switch {
+  color: #8fb7d8;
+  font-size: 11px;
+  text-decoration: none;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.switch:hover { color: var(--accent); border-color: rgba(124, 216, 255, .4); }
+
 .live-dot {
   width: 8px;
   height: 8px;
-  margin-top: 8px;
   border-radius: 50%;
   background: #65f0b4;
   box-shadow: 0 0 14px #65f0b4;

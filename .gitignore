@@ -21,6 +21,9 @@ __pycache__/
 *.pyc
 .venv/
 
+# 本机临时脚本与截图
+Temp/
+
 # 系统与编辑器
 Thumbs.db
 .DS_Store
@@ -44,5 +47,7 @@ Voice/output/
 MemoryGalaxy/galaxy.json
 MemoryGalaxy/preview.html
 MemoryGalaxy/preview.png
+MemoryGalaxy/preview-3d*
 MemoryGalaxy/detail-preview.png
+MemoryGalaxy/detail-3d.png
 MemoryGalaxy/dom.html

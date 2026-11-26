@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>大肥鱼 · 记忆星河</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="force.css">
 </head>
 <body>
-  <canvas id="sky" aria-label="大肥鱼记忆星河"></canvas>
+  <div id="graph" aria-label="大肥鱼记忆星河 3D"></div>
+  <div class="vignette" aria-hidden="true"></div>
+  <div id="labels" class="labels" aria-hidden="true"></div>
 
   <header class="hud">
     <div class="title-row">
@@ -15,7 +18,10 @@
         <h1>记忆星河</h1>
         <p class="subtitle" id="subtitle">正在点亮…</p>
       </div>
-      <span class="live-dot" title="本地只读"></span>
+      <div class="view-links">
+        <a class="switch" href="index-2d.html">2D 版</a>
+        <span class="live-dot" title="本地只读"></span>
+      </div>
     </div>
     <div class="tools">
       <input id="search" type="search" placeholder="搜一条记忆、一个标签…" autocomplete="off">
@@ -31,8 +37,6 @@
     </div>
   </aside>
 
-  <div id="tooltip" class="tooltip" role="status"></div>
-
   <div class="legend">
     <span><i class="dot core"></i>核心</span>
     <span><i class="dot memory"></i>记忆</span>
@@ -43,6 +47,7 @@
   <footer class="hint">拖拽旋转 · 滚轮缩放 · 点击星星查看记忆</footer>
   <div id="loader" class="loader">正在点亮记忆…</div>
 
-  <script src="app.js"></script>
+  <script src="vendor/3d-force-graph.min.js"></script>
+  <script src="force-app.js"></script>
 </body>
 </html>
