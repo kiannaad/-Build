@@ -20,6 +20,7 @@
 | 候选提取器 | ✅ `extractor.py`（规则版）；`memory_extract_model`（qwen2.5:1.5b 实测） |
 | 候选审核 | ✅ `memory_candidates` / `memory_reject`（软删除，可恢复） |
 | 恢复 | ✅ `memory_restore`（deleted/archived → candidate，重新审核） |
+| 召回 | ✅ `memory_recall`（FTS/LIKE + 精排，可 `include_restricted`） |
 | 状态 | ✅ `memory_stats`（事件/记忆/核心/摘要/审计计数） |
 | 语义召回 | ✅ `memory_embed` / `memory_semantic_recall`（bge-m3 + 精排） |
 | 清理 | ✅ `memory_purge`（仅过期 deleted，必须 confirm） |
