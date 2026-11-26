@@ -23,6 +23,16 @@
 
 情绪值可选：`neutral`、`happy`、`playful`、`tender`、`sad`、`love`。
 
+## 表情包
+
+同一插件也解析单行隐藏标记：
+
+```markdown
+[dfy-sticker-1]: # "comfort"
+```
+
+可用名字：`happy` / `comfort` / `sleepy` / `speechless` / `angry` / `shy` / `love` / `thinking`。图片由 `http://127.0.0.1:9882/Stickers/<name>.png` 提供。
+
 ## 依赖
 
 - `http://127.0.0.1:9881/speak`：本地语音桥；

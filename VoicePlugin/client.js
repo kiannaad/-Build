@@ -210,6 +210,13 @@ window.__ModuleLoader__.load({
         white-space: pre-wrap; max-height: 240px; overflow: auto;
       }
       .dafeiyu-voice-empty { color: var(--dsw-alias-text-secondary, #7e8ca6); font-size: 12px; padding: 24px 4px; }
+      .dafeiyu-sticker-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 4px; }
+      .dafeiyu-sticker-img {
+        width: 140px; height: 140px; object-fit: contain; border-radius: 16px;
+        background: rgba(255,255,255,.03); border: 1px solid rgba(125,160,220,.12);
+        cursor: zoom-in; transition: transform .16s ease;
+      }
+      .dafeiyu-sticker-img:hover { transform: translateY(-2px) scale(1.03); }
       .dafeiyu-voice-user {
         align-self: flex-end; max-width: min(72%, 480px); padding: 8px 11px;
         border-radius: 14px 4px 14px 14px; background: rgba(90, 120, 180, .14);
@@ -391,6 +398,57 @@ window.__ModuleLoader__.load({
       return out;
     }
 
+    const STICKER_NAMES = new Set(['happy', 'comfort', 'sleepy', 'speechless', 'angry', 'shy', 'love', 'thinking']);
+
+    function parseStickers(text) {
+      const out = [];
+      // 单行 Markdown 引用定义，渲染不可见：
+      // [dfy-sticker-1]: # "comfort"
+      const re = /^[ \t]*\[dfy-sticker-(\d+)\]:[ \t]*#[ \t]*"([a-z_]+)"[ \t]*$/gmi;
+      let match;
+      while ((match = re.exec(String(text || ''))) !== null) {
+        const name = String(match[2] || '').toLowerCase();
+        if (STICKER_NAMES.has(name) && !out.includes(name)) out.push(name);
+      }
+      return out;
+    }
+
+    function StickerTurnBubbles({ turn, useChat }) {
+      ensureVoiceStyles();
+      const turnNo = turn && typeof turn === 'object' ? turn.turn : turn;
+      const chat = typeof useChat === 'function' ? useChat : (selector) => selector(EMPTY);
+      const snapshot = chat((value) => value);
+      const text = useMemo(() => {
+        if (!snapshot || !snapshot.locations || typeof snapshot.locations.getTurn !== 'function') return '';
+        const keys = snapshot.locations.getTurn(turnNo);
+        let last = '';
+        for (const key of keys) {
+          const node = snapshot.nodes.get(key);
+          if (!node || node.kind !== 'assistant-step' || !node.data) continue;
+          const candidate = assistantText(node.data.blocks);
+          if (candidate) last = candidate;
+        }
+        return last;
+      }, [snapshot, turnNo]);
+      const stickers = useMemo(() => parseStickers(text), [text]);
+      if (!stickers.length) return null;
+      return h('div', { className: 'dafeiyu-sticker-row' },
+        stickers.map((name) => {
+          const url = `http://127.0.0.1:9882/Stickers/${name}.png`;
+          return h('img', {
+            key: name,
+            className: 'dafeiyu-sticker-img',
+            src: url,
+            alt: `大肥鱼表情：${name}`,
+            title: `大肥鱼表情 · ${name}`,
+            loading: 'lazy',
+            draggable: false,
+            onClick: () => window.open(url, '_blank', 'noopener,noreferrer'),
+          });
+        }),
+      );
+    }
+
     function VoiceTurnBubbles({ turn, useChat }) {
       ensureVoiceStyles();
       const turnNo = turn && typeof turn === 'object' ? turn.turn : turn;
@@ -481,6 +539,11 @@ window.__ModuleLoader__.load({
           id: 'voice-bubbles',
           order: 30,
         }, VoiceTurnBubbles));
+        ctx.slots.inject('conversation.chat.turnTail', () => ctx.slots.register({
+          name: 'conversation.chat.turnTail',
+          id: 'sticker-bubbles',
+          order: 31,
+        }, StickerTurnBubbles));
         ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
           name: 'conversation.composer.dock',
           id: 'voice-auto',

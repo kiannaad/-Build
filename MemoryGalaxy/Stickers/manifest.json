@@ -1,0 +1,50 @@
+[
+  {
+    "name": "happy",
+    "label": "开心",
+    "file": "happy.png",
+    "desc": "尾巴翘起来，眼睛发亮"
+  },
+  {
+    "name": "comfort",
+    "label": "抱抱",
+    "file": "comfort.png",
+    "desc": "张开小鳍，靠过来"
+  },
+  {
+    "name": "sleepy",
+    "label": "困困",
+    "file": "sleepy.png",
+    "desc": "眼睛闭上，冒 Z"
+  },
+  {
+    "name": "speechless",
+    "label": "无语",
+    "file": "speechless.png",
+    "desc": "平嘴，旁边一排省略点"
+  },
+  {
+    "name": "angry",
+    "label": "生气",
+    "file": "angry.png",
+    "desc": "眉毛竖起来，冒怒气"
+  },
+  {
+    "name": "shy",
+    "label": "害羞",
+    "file": "shy.png",
+    "desc": "脸红，冒粉色星星"
+  },
+  {
+    "name": "love",
+    "label": "喜欢",
+    "file": "love.png",
+    "desc": "心形眼睛，冒爱心"
+  },
+  {
+    "name": "thinking",
+    "label": "想想",
+    "file": "thinking.png",
+    "desc": "歪嘴，冒问号"
+  }
+]
