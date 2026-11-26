@@ -241,7 +241,7 @@ function buildGalaxy() {
   ];
   for (const [x, y, z, size, color, op] of nebulaSpecs) {
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: nebulaTex, color, transparent: true, opacity: op * 0.55,
+      map: nebulaTex, color, transparent: true, opacity: op * 0.42,
       depthWrite: false, blending: THREE.AdditiveBlending,
     }));
     sprite.position.set(x, y, z);
@@ -594,7 +594,7 @@ async function boot() {
 
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
-    bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.55, 0.38, 0.42);
+    bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.28, 0.34, 0.5);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
 
