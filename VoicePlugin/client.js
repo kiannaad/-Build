@@ -390,13 +390,14 @@ window.__ModuleLoader__.load({
 
     function VoiceTurnBubbles({ turn, useChat }) {
       ensureVoiceStyles();
+      const turnNo = turn && typeof turn === 'object' ? turn.turn : turn;
       const chat = typeof useChat === 'function' ? useChat : (selector) => selector(EMPTY);
       const snapshot = chat((value) => value);
       const source = useMemo(() => {
         if (!snapshot || !snapshot.locations || typeof snapshot.locations.getTurn !== 'function') {
           return { text: '', time: 0 };
         }
-        const keys = snapshot.locations.getTurn(turn);
+        const keys = snapshot.locations.getTurn(turnNo);
         let text = '';
         let time = 0;
         for (const key of keys) {
@@ -409,7 +410,7 @@ window.__ModuleLoader__.load({
           }
         }
         return { text, time };
-      }, [snapshot, turn]);
+      }, [snapshot, turnNo]);
       const latestTurn = useMemo(() => {
         const order = snapshot && snapshot.timeline && snapshot.timeline.turnOrder;
         return Array.isArray(order) && order.length ? order[order.length - 1] : undefined;
@@ -418,11 +419,11 @@ window.__ModuleLoader__.load({
         const explicit = parseVoiceSegments(source.text);
         if (explicit.length) return explicit;
         // 兜底：最新一条短回复自动生成气泡，避免模型漏写协议。
-        if (!latestTurn || turn !== latestTurn) return [];
+        if (!latestTurn || turnNo !== latestTurn) return [];
         if (!source.text || source.text.length > 220) return [];
         if (/```|^\s*\|/.test(source.text)) return [];
         return [{ emotion: 'neutral', text: source.text }];
-      }, [source.text, source.time, turn, latestTurn]);
+      }, [source.text, source.time, turnNo, latestTurn]);
       if (!segments.length) return null;
       return h('div', {
         style: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', margin: '4px 0 6px' },
