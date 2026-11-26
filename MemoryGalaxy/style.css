@@ -220,6 +220,19 @@ h1 {
   line-height: 1.6;
 }
 .panel .sources b { color: #aebcd4; }
+.panel .link {
+  display: block;
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: #a9c6e8;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.panel .link:hover { color: var(--accent); }
 .panel .speak {
   width: 100%;
   height: 34px;

@@ -53,6 +53,8 @@
     lastY: 0,
     hover: null,
     selected: null,
+    neighbors: new Set(),
+    target: null,
     kind: null,
     query: '',
     idleTimer: null,
@@ -81,6 +83,12 @@
   const rand = (seed, salt = 0) => {
     const x = Math.sin(seed * 12.9898 + salt * 78.233) * 43758.5453;
     return x - Math.floor(x);
+  };
+  const angleDelta = (from, to) => {
+    let d = (to - from) % (Math.PI * 2);
+    if (d > Math.PI) d -= Math.PI * 2;
+    if (d < -Math.PI) d += Math.PI * 2;
+    return d;
   };
   const colorOf = (n) => n.type === 'memory'
     ? (KIND_COLORS[n.kind] || '#7cd8ff')
@@ -250,6 +258,7 @@
 
   function drawEdges() {
     const focus = state.hover || state.selected;
+    const selected = state.selected;
     for (const e of edges) {
       const a = byId.get(e.source);
       const b = byId.get(e.target);
@@ -257,11 +266,13 @@
       const pa = project(a.pos);
       const pb = project(b.pos);
       const touched = focus && (e.source === focus.id || e.target === focus.id);
+      const related = selected && (e.source === selected.id || e.target === selected.id);
       let color = 'rgba(140, 165, 205, .12)';
       let width = 0.6;
       if (e.type === 'semantic') { color = 'rgba(92, 202, 255, .15)'; width = 0.7; }
       if (e.type === 'tag') { color = 'rgba(232, 197, 141, .10)'; width = 0.5; }
-      if (touched) { color = 'rgba(124, 216, 255, .55)'; width = 1.4; }
+      if (selected && !related) { color = 'rgba(120, 145, 185, .035)'; width = 0.35; }
+      if (touched || related) { color = 'rgba(124, 216, 255, .6)'; width = 1.5; }
       ctx.strokeStyle = color;
       ctx.lineWidth = width;
       ctx.beginPath();
@@ -279,7 +290,11 @@
     const size = Math.max(0.6, base * clamp(p.s, 0.55, 1.7));
     const color = colorOf(n);
     const focus = state.hover === n || state.selected === n;
-    const alpha = n.type === 'event' ? 0.58 : 0.95;
+    const dimmed = state.selected
+      && n.id !== state.selected.id
+      && n.type !== 'core'
+      && !state.neighbors.has(n.id);
+    const alpha = (n.type === 'event' ? 0.58 : 0.95) * (dimmed ? 0.28 : 1);
     const r = focus ? size * 1.5 : size;
 
     const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 4.2);
@@ -305,6 +320,13 @@
       ctx.arc(p.x, p.y, r + 5 + Math.sin(t * 0.0018) * 1.2, 0, Math.PI * 2);
       ctx.stroke();
     }
+    if (state.selected === n) {
+      ctx.strokeStyle = 'rgba(124, 216, 255, .65)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r + 6 + Math.sin(t * 0.0022) * 1.2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
 
     const showLabel = n.type === 'core' || n.type === 'digest'
       || (n.type === 'memory' && (n.importance >= 5 || focus))
@@ -315,13 +337,33 @@
       ctx.font = n.type === 'core' ? '600 12px "Microsoft YaHei", sans-serif' : '11px "Microsoft YaHei", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
-      const text = n.type === 'core' ? '核心记忆' : n.label;
+      ctx.shadowColor = 'rgba(0, 0, 0, .85)';
+      ctx.shadowBlur = 5;
+      const text = n.type === 'core' ? '核心记忆'
+        : (n.type === 'memory' ? n.label.slice(0, 22) : n.label);
       ctx.fillText(text, p.x, p.y + r * 3.1 + 4);
+      ctx.shadowBlur = 0;
     }
     ctx.globalAlpha = 1;
   }
 
   function draw(t) {
+    if (state.target) {
+      state.yaw += angleDelta(state.yaw, state.target.yaw) * 0.09;
+      state.pitch += (state.target.pitch - state.pitch) * 0.09;
+      state.dist += (state.target.dist - state.dist) * 0.09;
+      if (Math.abs(angleDelta(state.yaw, state.target.yaw)) < 0.01
+        && Math.abs(state.target.pitch - state.pitch) < 0.01
+        && Math.abs(state.target.dist - state.dist) < 0.05) {
+        state.yaw = state.target.yaw;
+        state.pitch = state.target.pitch;
+        state.dist = state.target.dist;
+        state.target = null;
+      }
+    } else if (state.auto && !state.dragging) {
+      state.yaw += 0.00045;
+    }
+
     drawBackground(t);
     drawEdges();
 
@@ -335,7 +377,6 @@
     screenNodes.sort((a, b) => b.p.z - a.p.z);
     for (const { n, p } of screenNodes) drawNode(n, p, t);
 
-    if (state.auto && !state.dragging) state.yaw += 0.00045;
     requestAnimationFrame(draw);
   }
 
@@ -368,6 +409,24 @@
       .filter(Boolean);
   }
 
+  function relatedNodes(n) {
+    if (n.type === 'tag') {
+      return edges.filter((e) => e.type === 'tag' && e.target === n.id)
+        .map((e) => byId.get(e.source)).filter(Boolean);
+    }
+    if (n.type === 'event') {
+      const incoming = edges.find((e) => e.type === 'source' && e.target === n.id);
+      return incoming ? [byId.get(incoming.source)].filter(Boolean) : [];
+    }
+    return [];
+  }
+
+  function linkList(nodes, label) {
+    if (!nodes.length) return '';
+    return `<div class="sources"><b>${escapeHtml(label)} ${nodes.length}</b><br>${nodes.slice(0, 8).map((x) =>
+      `<button class="link" type="button" data-node="${escapeHtml(x.id)}">· ${escapeHtml(x.label)}</button>`).join('')}</div>`;
+  }
+
   function openPanel(n) {
     state.selected = n;
     panel.classList.add('open');
@@ -375,8 +434,11 @@
     const tags = (n.tags || []).map((x) => `<span class="tag">${escapeHtml(x)}</span>`).join('');
     const src = sourceEvents(n);
     const sources = src.length
-      ? `<div class="sources"><b>来源事件</b><br>${src.slice(0, 3).map((e) => '· ' + escapeHtml(e.label)).join('<br>')}</div>`
+      ? `<div class="sources"><b>来源事件 ${src.length}</b><br>${src.slice(0, 5).map((e) =>
+        `<button class="link" type="button" data-node="${escapeHtml(e.id)}">· ${escapeHtml(e.label)}</button>`).join('')}</div>`
       : '';
+    const related = relatedNodes(n);
+    const relatedBlock = linkList(related, n.type === 'tag' ? '相关记忆' : '关联记忆');
     const meta = n.type === 'memory'
       ? `<div class="meta">
           <span>重要度</span><b>${n.importance} / 5</b>
@@ -386,20 +448,59 @@
       : n.type === 'event'
         ? `<div class="meta"><span>时间</span><b>${escapeHtml((n.occurred_at || '').slice(0, 16).replace('T', ' '))}</b></div>`
         : '';
+    const bodyText = n.type === 'tag'
+      ? `和「${n.label}」有关的记忆 ${related.length} 条。点下面的记忆就能跳过去。`
+      : (n.body || n.label);
     const canSpeak = (n.type === 'memory' || n.type === 'core' || n.type === 'digest') && n.body;
     panelBody.innerHTML = `
       <span class="kind">${escapeHtml(kindName)}</span>
       <h2>${escapeHtml(n.label)}</h2>
-      <p class="body">${escapeHtml(n.body || n.label)}</p>
+      <p class="body">${escapeHtml(bodyText)}</p>
       ${tags ? `<div class="tags">${tags}</div>` : ''}
       ${meta}
+      ${relatedBlock}
       ${sources}
       ${canSpeak ? `<button class="speak" id="speak-btn" type="button">让大肥鱼读给我听</button>` : ''}
     `;
+    panelBody.querySelectorAll('[data-node]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const next = byId.get(btn.dataset.node);
+        if (next) selectNode(next);
+      });
+    });
     const speakBtn = document.getElementById('speak-btn');
     if (speakBtn) {
       speakBtn.addEventListener('click', () => speak(n, speakBtn));
     }
+  }
+
+  function focusCamera(n) {
+    if (!n || !n.pos) return;
+    const horiz = Math.hypot(n.pos.x, n.pos.z) || 0.001;
+    state.target = {
+      yaw: Math.atan2(n.pos.x, n.pos.z),
+      pitch: clamp(Math.atan2(n.pos.y, horiz), -1.1, 1.1),
+      dist: n.type === 'core' ? 11 : 13,
+    };
+    state.auto = false;
+  }
+
+  function selectNode(n) {
+    state.target = null;
+    if (!n) {
+      panel.classList.remove('open');
+      state.selected = null;
+      state.neighbors.clear();
+      return;
+    }
+    state.selected = n;
+    state.neighbors = new Set();
+    for (const e of edges) {
+      if (e.source === n.id) state.neighbors.add(e.target);
+      else if (e.target === n.id) state.neighbors.add(e.source);
+    }
+    focusCamera(n);
+    openPanel(n);
   }
 
   async function speak(n, btn) {
@@ -462,6 +563,7 @@
       state.lastX = ev.clientX;
       state.lastY = ev.clientY;
       state.auto = false;
+      state.target = null;
       canvas.classList.add('dragging');
       canvas.setPointerCapture(ev.pointerId);
     });
@@ -483,13 +585,15 @@
     });
     canvas.addEventListener('pointerup', (ev) => {
       if (state.dragging && state.moved < 6) {
-        selectNode(hitTest(ev.clientX, ev.clientY));
+        selectNode(hitTest(ev.clientX, ev.clientY) || null);
       }
       state.dragging = false;
       canvas.classList.remove('dragging');
       try { canvas.releasePointerCapture(ev.pointerId); } catch { /* ignore */ }
       clearTimeout(state.idleTimer);
-      state.idleTimer = setTimeout(() => { state.auto = true; }, 6000);
+      state.idleTimer = setTimeout(() => {
+        if (!state.selected) state.auto = true;
+      }, 6000);
     });
     canvas.addEventListener('pointerleave', () => {
       state.hover = null;
@@ -500,10 +604,7 @@
       state.dist = clamp(state.dist + ev.deltaY * 0.012, 8, 34);
     }, { passive: false });
     canvas.addEventListener('dblclick', () => reset());
-    closeBtn.addEventListener('click', () => {
-      panel.classList.remove('open');
-      state.selected = null;
-    });
+    closeBtn.addEventListener('click', () => selectNode(null));
     search.addEventListener('input', () => { state.query = search.value.trim().toLowerCase(); });
     resetBtn.addEventListener('click', reset);
     window.addEventListener('resize', resize);
@@ -516,6 +617,8 @@
     state.kind = null;
     state.query = '';
     state.auto = true;
+    state.target = null;
+    state.neighbors.clear();
     search.value = '';
     [...chips.querySelectorAll('.chip')].forEach((c, i) => c.classList.toggle('on', i === 0));
     panel.classList.remove('open');
@@ -541,6 +644,7 @@
       buildChips();
       const m = data.meta || {};
       subtitle.textContent = `${m.memory_count || 0} 颗记忆星 · ${m.event_count || 0} 粒事件尘 · ${m.tag_count || 0} 个标签 · ${m.digest_count || 0} 份日摘要`;
+      window.__GALAXY_DEBUG__ = { state, nodes, edges, selectNode, visible };
       loader.classList.add('hide');
       requestAnimationFrame(draw);
     } catch (err) {
