@@ -17,7 +17,11 @@ if (-not (Test-Port 9880)) {
 
 if (-not (Test-Port 9881)) {
   Write-Host 'starting voice bridge on 9881...'
-  Start-Process -FilePath 'python.exe' `
+  $python = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
+  if (-not $python) {
+    $python = 'C:\Users\XHLENOVO\AppData\Local\Programs\Python\Python314\python.exe'
+  }
+  Start-Process -FilePath $python `
     -ArgumentList @('D:\大肥鱼\VoiceService\voice_bridge.py') `
     -WorkingDirectory 'D:\大肥鱼\VoiceService' -WindowStyle Hidden
 } else {

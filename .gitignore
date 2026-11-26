@@ -39,3 +39,9 @@ Voice/**/*.wav
 Voice/**/*.mp3
 Voice/**/*.m4a
 Voice/output/
+
+# 记忆星河导出（含私人记忆，不上传）
+MemoryGalaxy/galaxy.json
+MemoryGalaxy/preview.html
+MemoryGalaxy/preview.png
+MemoryGalaxy/dom.html
