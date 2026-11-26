@@ -375,6 +375,39 @@ window.__ModuleLoader__.load({
       );
     }
 
+    function parseVoiceSegments(text) {
+      const out = [];
+      const re = /<!--\s*dfy:voice(?::([a-z_]+))?\s*-->([\s\S]*?)<!--\s*\/dfy:voice\s*-->/gi;
+      let match;
+      while ((match = re.exec(text)) !== null) {
+        const body = String(match[2] || '').trim();
+        if (body) out.push({ emotion: match[1] || 'neutral', text: body });
+      }
+      return out;
+    }
+
+    function VoiceAutoBubbles({ messageId, useChat }) {
+      const chat = typeof useChat === 'function' ? useChat : (selector) => selector(EMPTY);
+      const source = chat((snapshot) => {
+        const node = findNode(snapshot, messageId);
+        if (!node || !node.data) return { text: '', time: 0 };
+        return {
+          text: assistantText(node.data.blocks),
+          time: typeof node.data.time === 'number' ? node.data.time : 0,
+        };
+      });
+      const segments = useMemo(() => parseVoiceSegments(source.text), [source.text]);
+      if (!segments.length) return null;
+      return h('div', {
+        style: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', marginTop: 4 },
+      }, segments.map((segment, index) => h(VoiceBubble, {
+        key: index,
+        text: segment.text,
+        time: source.time,
+        index,
+      })));
+    }
+
     function AutoToggle() {
       const on = useAutoRead();
       const toggle = () => {
@@ -413,6 +446,11 @@ window.__ModuleLoader__.load({
           id: 'voice-read',
           order: 20,
         }, VoiceAction));
+        ctx.slots.inject('conversation.chat.assistant-actions', () => ctx.slots.register({
+          name: 'conversation.chat.assistant-actions',
+          id: 'voice-bubbles',
+          order: 30,
+        }, VoiceAutoBubbles));
         ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
           name: 'conversation.composer.dock',
           id: 'voice-auto',
