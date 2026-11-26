@@ -55,6 +55,14 @@
 
 一个已知行为：并行调用两个工具会触发 `CONTROL_PREEMPTED`，因为 strict 只允许一个控制代次；**串行调用即可**。
 
+### 端到端点击/输入测试（2026-11-26 10:15）
+
+- `Shortcut(win+r)` → `Snapshot` 找到“运行”编辑框 `#7` → `Type` 清空并输入 `cmd` → Enter；
+- 在 cmd 窗口中心 `Type` 输入 `echo 大肥鱼桌面测试`，`Screenshot` 确认屏幕回显成功；
+- 原计划的记事本测试失败：本机 `Notepad.exe` 报缺 `Microsoft.UI.Windowing.Core.dll`，无法启动（环境问题，不是 MCP 问题）；
+- `Click` 调用本身成功（坐标与 label 都能点），但记事本错误框的“确定”按钮点击后窗口未关闭，最终用 `Alt+F4` 关闭；
+- 操作后 `ControlStatus(release=true)`，状态回到 `ready`。
+
 ## 影响面
 
 - 所有 desktop profile 会话都会看到 `mcp__windows__*` 工具，不只 `D:\大肥鱼`。
@@ -63,7 +71,8 @@
 
 ## 限制
 
-- 还没做 `Click`/`Type`/`Shortcut` 的端到端测试；
+- 记事本本身损坏（缺 `Microsoft.UI.Windowing.Core.dll`），需要修复系统应用后才能用它做测试；
+- 端到端已用 cmd 验证，尚未覆盖浏览器/复杂应用；
 - 白名单里的 `Click`/`Type` 本身仍能操作大部分界面，权限边界靠“不开放 App/文件/注册表”和控制权门；
 - UAC 提权窗口、部分全屏游戏/受保护窗口可能无法操作；
 - Windows-MCP 依赖 Python 3.14 与 uvx；升级需重新验证；
