@@ -1,35 +1,18 @@
 # 大肥鱼表情包
 
-原创透明底 PNG，512×512，共 8 个。
+使用 dsh-pet 自带的 `assets/memes`，本地复制到 `Stickers/pet/`，不提交到公开仓库。
 
-| 名字 | 中文 | 用途 |
-| --- | --- | --- |
-| `happy` | 开心 | 翘尾巴、眼睛发亮 |
-| `comfort` | 抱抱 | 张开小鳍靠过来 |
-| `sleepy` | 困困 | 闭眼冒 Z |
-| `speechless` | 无语 | 平嘴加省略点 |
-| `angry` | 生气 | 竖眉冒怒气 |
-| `shy` | 害羞 | 脸红冒星星 |
-| `love` | 喜欢 | 心形眼睛 |
-| `thinking` | 想想 | 歪嘴冒问号 |
+- 共 25 张，384×384 PNG；
+- 本地地址：`http://127.0.0.1:9882/Stickers/pet/<file>.png`
+- 来源：`~/.dsh/profiles/desktop/node_modules/dsh-pet/assets/memes`
+- 版权归 dsh-pet / 原作者；这里只做本机聊天展示，不对外分发。
 
-## 在聊天里用
-
-单独一行写隐藏引用定义：
+## 聊天协议
 
 ```markdown
-[dfy-sticker-1]: # "comfort"
+[dfy-sticker-1]: # "cute"
 ```
 
-客户端会渲染成图片，标记本身不显示。多张用 `dfy-sticker-2`、`dfy-sticker-3`。
+常用别名：`cute`、`keep`、`pressure`、`rice`、`full`、`sleep`、`dead`、`butter`、`update`、`riemann`、`resources`、`ciallo`、`virus`、`medicine`。
 
-## 静态资源
-
-由 `http://127.0.0.1:9882/Stickers/<name>.png` 提供，不需要外网图床。
-
-重新生成：
-
-```powershell
-cd 'D:\大肥鱼'
-python Stickers\generate_stickers.py
-```
+多张用 `dfy-sticker-2`。完整映射见 `manifest.json`。

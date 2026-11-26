@@ -57,3 +57,5 @@ MemoryGalaxy/three-*.tgz
 
 # 9882 目录联接，表情素材只保留根目录一份
 MemoryGalaxy/Stickers
+Stickers/pet/
+Stickers/pet-preview.png

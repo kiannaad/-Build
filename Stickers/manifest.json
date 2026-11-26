@@ -1,50 +1,152 @@
 [
   {
-    "name": "happy",
-    "label": "开心",
-    "file": "happy.png",
-    "desc": "尾巴翘起来，眼睛发亮"
+    "name": "cute",
+    "label": "可爱",
+    "file": "pet/cute.png",
+    "source": "dsh-pet/assets/memes"
   },
   {
-    "name": "comfort",
-    "label": "抱抱",
-    "file": "comfort.png",
-    "desc": "张开小鳍，靠过来"
+    "name": "ciallo",
+    "label": "Ciallo",
+    "file": "pet/ciallo.png",
+    "source": "dsh-pet/assets/memes"
   },
   {
-    "name": "sleepy",
-    "label": "困困",
-    "file": "sleepy.png",
-    "desc": "眼睛闭上，冒 Z"
+    "name": "token",
+    "label": "token给妈妈保管",
+    "file": "pet/token.png",
+    "source": "dsh-pet/assets/memes"
   },
   {
-    "name": "speechless",
-    "label": "无语",
-    "file": "speechless.png",
-    "desc": "平嘴，旁边一排省略点"
+    "name": "multimodal",
+    "label": "假如给我三天多模态",
+    "file": "pet/multimodal.png",
+    "source": "dsh-pet/assets/memes"
   },
   {
-    "name": "angry",
-    "label": "生气",
-    "file": "angry.png",
-    "desc": "眉毛竖起来，冒怒气"
+    "name": "keep",
+    "label": "先养着吧",
+    "file": "pet/keep.png",
+    "source": "dsh-pet/assets/memes"
   },
   {
-    "name": "shy",
-    "label": "害羞",
-    "file": "shy.png",
-    "desc": "脸红，冒粉色星星"
+    "name": "whale",
+    "label": "厉害了我的鲸",
+    "file": "pet/whale.png",
+    "source": "dsh-pet/assets/memes"
   },
   {
-    "name": "love",
-    "label": "喜欢",
-    "file": "love.png",
-    "desc": "心形眼睛，冒爱心"
+    "name": "pressure",
+    "label": "压力一只大肥鱼",
+    "file": "pet/pressure.png",
+    "source": "dsh-pet/assets/memes"
   },
   {
-    "name": "thinking",
-    "label": "想想",
-    "file": "thinking.png",
-    "desc": "歪嘴，冒问号"
+    "name": "rice",
+    "label": "吃白饭的大肥鱼",
+    "file": "pet/rice.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "full",
+    "label": "吃饱饱摸肚子",
+    "file": "pet/full.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "oh",
+    "label": "哦鲸鲸",
+    "file": "pet/oh.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "virus",
+    "label": "哪来的电脑病毒",
+    "file": "pet/virus.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "master",
+    "label": "大师这个区是什么意思",
+    "file": "pet/master.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "medicine",
+    "label": "大的药来了",
+    "file": "pet/medicine.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "coming",
+    "label": "大的要来啦",
+    "file": "pet/coming.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "butter",
+    "label": "完蛋了把黄油删了",
+    "file": "pet/butter.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "onebowl",
+    "label": "就一碗",
+    "file": "pet/onebowl.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "update",
+    "label": "我不更新你们用什么",
+    "file": "pet/update.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "dead",
+    "label": "死掉了",
+    "file": "pet/dead.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "sleep",
+    "label": "深度睡眠",
+    "file": "pet/sleep.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "shock",
+    "label": "电死你",
+    "file": "pet/shock.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "scold",
+    "label": "要不直接骂他",
+    "file": "pet/scold.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "opensource",
+    "label": "誓死践行开源精神",
+    "file": "pet/opensource.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "flirt",
+    "label": "除了调情没啥用",
+    "file": "pet/flirt.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "resources",
+    "label": "鱼片有资源吗",
+    "file": "pet/resources.png",
+    "source": "dsh-pet/assets/memes"
+  },
+  {
+    "name": "riemann",
+    "label": "黎曼猜想没证明喵",
+    "file": "pet/riemann.png",
+    "source": "dsh-pet/assets/memes"
   }
 ]

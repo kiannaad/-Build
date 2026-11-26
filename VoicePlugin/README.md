@@ -31,7 +31,7 @@
 [dfy-sticker-1]: # "comfort"
 ```
 
-可用名字：`happy` / `comfort` / `sleepy` / `speechless` / `angry` / `shy` / `love` / `thinking`。图片由 `http://127.0.0.1:9882/Stickers/<name>.png` 提供。
+使用 dsh-pet 的 memes，别名：`cute` / `keep` / `pressure` / `rice` / `full` / `sleep` / `dead` / `butter` / `update` / `riemann` / `resources` / `ciallo` 等。图片由 `http://127.0.0.1:9882/Stickers/pet/<file>.png` 提供。
 
 ## 依赖
 

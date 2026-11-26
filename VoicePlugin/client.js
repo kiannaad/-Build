@@ -398,7 +398,17 @@ window.__ModuleLoader__.load({
       return out;
     }
 
-    const STICKER_NAMES = new Set(['happy', 'comfort', 'sleepy', 'speechless', 'angry', 'shy', 'love', 'thinking']);
+    const STICKER_FILES = {
+      cute: 'cute.png', ciallo: 'ciallo.png', token: 'token.png',
+      multimodal: 'multimodal.png', keep: 'keep.png', whale: 'whale.png',
+      pressure: 'pressure.png', rice: 'rice.png', full: 'full.png',
+      oh: 'oh.png', virus: 'virus.png', master: 'master.png',
+      medicine: 'medicine.png', coming: 'coming.png', butter: 'butter.png',
+      onebowl: 'onebowl.png', update: 'update.png', dead: 'dead.png',
+      sleep: 'sleep.png', shock: 'shock.png', scold: 'scold.png',
+      opensource: 'opensource.png', flirt: 'flirt.png', resources: 'resources.png',
+      riemann: 'riemann.png',
+    };
 
     function parseStickers(text) {
       const out = [];
@@ -408,7 +418,7 @@ window.__ModuleLoader__.load({
       let match;
       while ((match = re.exec(String(text || ''))) !== null) {
         const name = String(match[2] || '').toLowerCase();
-        if (STICKER_NAMES.has(name) && !out.includes(name)) out.push(name);
+        if (STICKER_FILES[name] && !out.includes(name)) out.push(name);
       }
       return out;
     }
@@ -434,7 +444,7 @@ window.__ModuleLoader__.load({
       if (!stickers.length) return null;
       return h('div', { className: 'dafeiyu-sticker-row' },
         stickers.map((name) => {
-          const url = `http://127.0.0.1:9882/Stickers/${name}.png`;
+          const url = `http://127.0.0.1:9882/Stickers/pet/${STICKER_FILES[name]}`;
           return h('img', {
             key: name,
             className: 'dafeiyu-sticker-img',
