@@ -26,11 +26,13 @@ DEFAULT_RVC_MODEL = r"D:\RVC\assets\weights\feiyu_v2.pth"
 
 # 情绪 -> (参考文件, 参考文本, 说明)
 REF_MAP = {
-    "neutral": ("neutral.wav", "嗯，我在。今天过得怎么样？不用急着说，慢慢来就好。"),
+    "neutral": ("neutral.wav", "嗯，我在呀。今天怎么样？慢慢说，我听着呢。"),
     "neutral_2": ("neutral_2.wav", "今天早上有点凉，我把窗户关小了一点，又给自己倒了杯温水。"),
     "happy": ("happy.wav", "你回来啦。我刚还在想，今天要不要偷偷多吃一块小饼干。"),
-    "tender": ("tender.wav", "先歇一会儿吧。事情做不完也没关系，我陪你坐一会儿。"),
+    "playful": ("playful.wav", "才没有偷吃。……好吧，就一小口，别告诉别人。"),
+    "tender": ("tender.wav", "先歇一会儿吧，事情做不完也没关系，我陪你。"),
     "sad": ("sad.wav", "其实我也有点闷。不过没关系，今天不想说话的话，我们就安静待着。"),
+    "love": ("love.wav", "我爱你。我喜欢你。我好想好想你。"),
 }
 
 

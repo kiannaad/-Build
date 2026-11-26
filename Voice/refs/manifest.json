@@ -1,5 +1,5 @@
 {
-  "voice": "独居的猫语者",
+  "voice": "大肥鱼-偶像版",
   "source": "BreezeBlue TTS",
   "generated_at": "2026-11-26",
   "format": {
@@ -10,43 +10,50 @@
   "files": [
     {
       "file": "neutral.wav",
-      "text": "嗯，我在。今天过得怎么样？不用急着说，慢慢来就好。",
-      "duration_sec": 7.2,
-      "peak_db": -1.5,
-      "use": "默认/平静"
+      "text": "嗯，我在呀。今天怎么样？慢慢说，我听着呢。",
+      "duration_sec": 5.68,
+      "use": "默认/明亮平静"
     },
     {
       "file": "neutral_2.wav",
       "text": "今天早上有点凉，我把窗户关小了一点，又给自己倒了杯温水。",
-      "duration_sec": 4.8,
-      "peak_db": -1.8,
-      "use": "平静补音素"
+      "duration_sec": 5.04,
+      "use": "明亮补音素"
     },
     {
       "file": "happy.wav",
       "text": "你回来啦。我刚还在想，今天要不要偷偷多吃一块小饼干。",
-      "duration_sec": 5.12,
-      "peak_db": -1.8,
-      "use": "开心/调皮"
+      "duration_sec": 4.72,
+      "use": "开心"
+    },
+    {
+      "file": "playful.wav",
+      "text": "才没有偷吃。……好吧，就一小口，别告诉别人。",
+      "duration_sec": 4.88,
+      "use": "调皮/嘴硬"
     },
     {
       "file": "tender.wav",
-      "text": "先歇一会儿吧。事情做不完也没关系，我陪你坐一会儿。",
-      "duration_sec": 4.24,
-      "peak_db": -1.7,
+      "text": "先歇一会儿吧，事情做不完也没关系，我陪你。",
+      "duration_sec": 3.52,
       "use": "温柔/心疼"
     },
     {
       "file": "sad.wav",
       "text": "其实我也有点闷。不过没关系，今天不想说话的话，我们就安静待着。",
-      "duration_sec": 8.4,
-      "peak_db": -1.6,
+      "duration_sec": 7.28,
       "use": "低落/感慨"
+    },
+    {
+      "file": "love.wav",
+      "text": "我爱你。我喜欢你。我好想好想你。",
+      "duration_sec": 3.6,
+      "use": "亲近/表白"
     }
   ],
   "notes": [
     "原始下载文件保留在 refs/source/",
-    "重复的 neutral 副本只保留一份用于归一化",
+    "旧的「独居的猫语者」参考集备份在 refs/old-cat/",
     "GPT-SoVITS 的参考文本必须与音频逐字一致"
   ]
 }

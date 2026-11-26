@@ -89,19 +89,21 @@ ffmpeg -i input.wav -af "silenceremove=start_periods=1:start_silence=0.2,arevers
 - 只切首尾静音，不要过度降噪、不要压缩动态；
 - 时长控制在 5–10 秒；超过就换更短的句子，不要硬切句子中间。
 
-## 6. 已生成（2026-11-26）
+## 6. 已生成（2026-11-26，偶像版）
 
-BreezeBlue 声线：**独居的猫语者**。
+BreezeBlue 声线：**大肥鱼-偶像版**。
 
-| 文件 | 时长 | 峰值 | 用途 |
-| --- | ---: | ---: | --- |
-| `neutral.wav` | 7.20s | -1.5 dB | 默认/平静 |
-| `neutral_2.wav` | 4.80s | -1.8 dB | 平静补音素 |
-| `happy.wav` | 5.12s | -1.8 dB | 开心/调皮 |
-| `tender.wav` | 4.24s | -1.7 dB | 温柔/心疼 |
-| `sad.wav` | 8.40s | -1.6 dB | 低落/感慨 |
+| 文件 | 时长 | 用途 |
+| --- | ---: | --- |
+| `neutral.wav` | 5.68s | 默认/明亮平静 |
+| `neutral_2.wav` | 5.04s | 明亮补音素 |
+| `happy.wav` | 4.72s | 开心 |
+| `playful.wav` | 4.88s | 调皮/嘴硬 |
+| `tender.wav` | 3.52s | 温柔/心疼 |
+| `sad.wav` | 7.28s | 低落/感慨 |
+| `love.wav` | 3.60s | 亲近/表白 |
 
-全部为 44.1kHz / 16bit / 单声道；原始下载在 `source/`，清单见 `manifest.json`。
+全部为 44.1kHz / 16bit / 单声道；原始下载在 `source/`，旧的「独居的猫语者」备份在 `old-cat/`，清单见 `manifest.json`。
 
 ## 7. 验收清单
 

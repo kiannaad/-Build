@@ -31,7 +31,7 @@ TOOLS = [
                 "text": {"type": "string"},
                 "emotion": {
                     "type": "string",
-                    "enum": ["neutral", "neutral_2", "happy", "tender", "sad"],
+                    "enum": ["neutral", "neutral_2", "happy", "playful", "tender", "sad", "love"],
                     "default": "neutral",
                 },
                 "speed": {"type": "number", "minimum": 0.5, "maximum": 2.0, "default": 1.0},
