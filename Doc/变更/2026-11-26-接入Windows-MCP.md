@@ -63,6 +63,14 @@
 - `Click` 调用本身成功（坐标与 label 都能点），但记事本错误框的“确定”按钮点击后窗口未关闭，最终用 `Alt+F4` 关闭；
 - 操作后 `ControlStatus(release=true)`，状态回到 `ready`。
 
+### 打开抖音创作者中心（2026-11-26 10:12）
+
+- `Shortcut(win+r)` → `Type` 输入 `https://creator.douyin.com/` → Enter；
+- Chrome 正常打开创作者中心首页，页面显示**扫码登录**；
+- 没有扫码、没有点击登录、没有发布任何内容；
+- 普通 Chrome 会话没有创作者中心登录态；抖音 duty 的 Cookie 在独立 Chrome profile 里，不是同一个浏览器；
+- 结论：Windows-MCP 能驱动浏览器进入目标页面；登录与发布仍需单独授权和登录流程。
+
 ## 影响面
 
 - 所有 desktop profile 会话都会看到 `mcp__windows__*` 工具，不只 `D:\大肥鱼`。
