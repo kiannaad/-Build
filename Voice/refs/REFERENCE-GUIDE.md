@@ -58,7 +58,21 @@ ffmpeg -i input.wav -af "silenceremove=start_periods=1:start_silence=0.2,arevers
 - 只切首尾静音，不要过度降噪、不要压缩动态；
 - 时长控制在 5–10 秒；超过就换更短的句子，不要硬切句子中间。
 
-## 6. 验收清单
+## 6. 已生成（2026-11-26）
+
+BreezeBlue 声线：**独居的猫语者**。
+
+| 文件 | 时长 | 峰值 | 用途 |
+| --- | ---: | ---: | --- |
+| `neutral.wav` | 7.20s | -1.5 dB | 默认/平静 |
+| `neutral_2.wav` | 4.80s | -1.8 dB | 平静补音素 |
+| `happy.wav` | 5.12s | -1.8 dB | 开心/调皮 |
+| `tender.wav` | 4.24s | -1.7 dB | 温柔/心疼 |
+| `sad.wav` | 8.40s | -1.6 dB | 低落/感慨 |
+
+全部为 44.1kHz / 16bit / 单声道；原始下载在 `source/`，清单见 `manifest.json`。
+
+## 7. 验收清单
 
 - [ ] 同一个人，五种语气只是语气不同，不是五个声音；
 - [ ] 无音乐、无混响、无第二人声；
@@ -67,7 +81,7 @@ ffmpeg -i input.wav -af "silenceremove=start_periods=1:start_silence=0.2,arevers
 - [ ] 每条 5–10 秒；
 - [ ] 首尾静音已切，音量大致一致。
 
-## 7. 和 dsh-fish-mood 的映射
+## 8. 和 dsh-fish-mood 的映射
 
 | 心情 | 参考音频 |
 | --- | --- |
@@ -76,7 +90,7 @@ ffmpeg -i input.wav -af "silenceremove=start_periods=1:start_silence=0.2,arevers
 | sad / down | `sad.wav` |
 | 其它 | `neutral.wav` |
 
-## 8. 关于 RVC
+## 9. 关于 RVC
 
 如果 BreezeBlue 生成的就是你想要的音色，GPT-SoVITS 零样本已经能直接用，**RVC 不是必须的**。
 
@@ -87,7 +101,7 @@ RVC 只在两种情况下有意义：
 
 先别把 RVC 接进主链路，等 GPT-SoVITS 的参考音频效果确认后再决定。
 
-## 9. 隐私
+## 10. 隐私
 
 - 参考文本都是通用句子，不含个人信息；
 - BreezeBlue 会把文本发到云端合成，生成音频后本地保存；
