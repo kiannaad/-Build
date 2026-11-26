@@ -33,3 +33,9 @@ Thumbs.db
 
 # 本地备份（含记忆库，不上传）
 Backups/
+
+# 语音素材与合成结果（大文件/私人音色，不上传）
+Voice/**/*.wav
+Voice/**/*.mp3
+Voice/**/*.m4a
+Voice/output/
