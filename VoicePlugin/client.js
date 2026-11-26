@@ -418,9 +418,8 @@ window.__ModuleLoader__.load({
         const explicit = parseVoiceSegments(source.text);
         if (explicit.length) return explicit;
         // 兜底：最新一条短回复自动生成气泡，避免模型漏写协议。
-        if (turn !== latestTurn) return [];
+        if (!latestTurn || turn !== latestTurn) return [];
         if (!source.text || source.text.length > 220) return [];
-        if (!source.time || source.time < STARTED_AT) return [];
         if (/```|^\s*\|/.test(source.text)) return [];
         return [{ emotion: 'neutral', text: source.text }];
       }, [source.text, source.time, turn, latestTurn]);
