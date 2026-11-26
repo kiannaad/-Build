@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import subprocess
 import time
 import urllib.error
 import urllib.request
@@ -20,6 +21,8 @@ from pathlib import Path
 DEFAULT_API = "http://127.0.0.1:9880"
 DEFAULT_REFS = Path(r"D:\大肥鱼\Voice\refs")
 DEFAULT_OUT = Path(r"D:\大肥鱼\Voice\output")
+DEFAULT_RVC = Path(r"D:\RVC")
+DEFAULT_RVC_MODEL = r"D:\RVC\assets\weights\feiyu_v2.pth"
 
 # 情绪 -> (参考文件, 参考文本, 说明)
 REF_MAP = {
@@ -44,11 +47,66 @@ def _wav_duration(path: Path) -> float:
         return wf.getnframes() / float(wf.getframerate())
 
 
+def rvc_convert(
+    input_wav: Path,
+    output_wav: Path,
+    *,
+    model: str | None = None,
+    index: str | None = None,
+    pitch: int = 0,
+    index_rate: float = 0.75,
+    protect: float = 0.33,
+    rms_mix_rate: float = 1.0,
+    rvc_dir: Path | None = None,
+) -> dict:
+    """调用 RVC 的 infer/cli.py 做音色转换；没有权重/环境时明确报错。"""
+    rvc_dir = Path(rvc_dir or os.environ.get("RVC_DIR", DEFAULT_RVC))
+    model = model or os.environ.get("RVC_MODEL", DEFAULT_RVC_MODEL)
+    py = rvc_dir / ".venv" / "Scripts" / "python.exe"
+    cli = rvc_dir / "infer" / "cli.py"
+    if not py.exists():
+        raise RuntimeError(f"RVC Python 环境不存在: {py}（先装 RVC 依赖）")
+    if not cli.exists():
+        raise RuntimeError(f"RVC CLI 不存在: {cli}")
+    if not Path(model).exists():
+        raise RuntimeError(f"RVC 权重不存在: {model}（把 feiyu_v2.pth 放到 assets/weights）")
+    cmd = [
+        str(py), str(cli),
+        "--model", str(model),
+        "--input", str(input_wav),
+        "--output", str(output_wav),
+        "--f0-method", "rmvpe",
+        "--pitch", str(int(pitch)),
+        "--index-rate", str(float(index_rate)),
+        "--protect", str(float(protect)),
+        "--rms-mix-rate", str(float(rms_mix_rate)),
+        "--format", "wav",
+        "--overwrite",
+    ]
+    if index:
+        cmd += ["--index", str(index)]
+    started = time.perf_counter()
+    proc = subprocess.run(
+        cmd, cwd=str(rvc_dir), capture_output=True, text=True, encoding="utf-8", errors="replace",
+    )
+    if proc.returncode != 0:
+        tail = (proc.stderr or proc.stdout or "").strip()[-1200:]
+        raise RuntimeError(f"RVC 转换失败（exit {proc.returncode}）: {tail}")
+    return {
+        "path": str(output_wav),
+        "duration_sec": round(_wav_duration(output_wav), 2),
+        "elapsed_sec": round(time.perf_counter() - started, 2),
+        "model": Path(model).name,
+    }
+
+
 def synthesize(
     text: str,
     *,
     emotion: str = "neutral",
     speed: float = 1.0,
+    use_rvc: bool = False,
+    rvc_model: str | None = None,
     api_base: str | None = None,
     refs: Path | None = None,
     out_dir: Path | None = None,
@@ -99,13 +157,25 @@ def synthesize(
     out = out_dir / f"voice-{stamp}.wav"
     out.write_bytes(body)
     elapsed = round(time.perf_counter() - started, 2)
-    return {
+    result = {
         "path": str(out),
         "duration_sec": round(_wav_duration(out), 2),
         "emotion": emotion,
         "reference": ref.name,
         "elapsed_sec": elapsed,
+        "rvc": False,
     }
+    if use_rvc:
+        rvc_out = out.with_name(f"{out.stem}-rvc.wav")
+        converted = rvc_convert(out, rvc_out, model=rvc_model)
+        result.update({
+            "source": str(out),
+            "path": converted["path"],
+            "duration_sec": converted["duration_sec"],
+            "rvc": True,
+            "rvc_elapsed_sec": converted["elapsed_sec"],
+        })
+    return result
 
 
 def status() -> dict:
@@ -120,6 +190,17 @@ def status() -> dict:
             api_ok = resp.status == 200
     except Exception as exc:  # noqa: BLE001
         api_error = str(exc)
+    rvc_dir = Path(os.environ.get("RVC_DIR", DEFAULT_RVC))
+    rvc_py = rvc_dir / ".venv" / "Scripts" / "python.exe"
+    rvc_cli = rvc_dir / "infer" / "cli.py"
+    rvc_model = os.environ.get("RVC_MODEL", DEFAULT_RVC_MODEL)
+    rvc_missing = []
+    if not rvc_py.exists():
+        rvc_missing.append(f"python: {rvc_py}")
+    if not rvc_cli.exists():
+        rvc_missing.append(f"cli: {rvc_cli}")
+    if not Path(rvc_model).exists():
+        rvc_missing.append(f"model: {rvc_model}")
     return {
         "api": api_base,
         "api_ok": api_ok,
@@ -127,5 +208,7 @@ def status() -> dict:
         "refs_dir": str(refs),
         "refs_ready": refs_ready,
         "output_dir": str(out_dir),
-        "rvc_enabled": False,
+        "rvc_ready": not rvc_missing,
+        "rvc_model": rvc_model,
+        "rvc_missing": rvc_missing,
     }

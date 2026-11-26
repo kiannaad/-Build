@@ -35,6 +35,10 @@ TOOLS = [
                     "default": "neutral",
                 },
                 "speed": {"type": "number", "minimum": 0.5, "maximum": 2.0, "default": 1.0},
+                "use_rvc": {
+                    "type": "boolean", "default": False,
+                    "description": "是否再用 RVC feiyu_v2 做音色转换（需要 RVC 环境和权重）",
+                },
             },
             "required": ["text"],
         },
@@ -57,6 +61,7 @@ def call_tool(name: str, args: dict) -> dict:
             str(args["text"]),
             emotion=str(args.get("emotion", "neutral")),
             speed=float(args.get("speed", 1.0)),
+            use_rvc=bool(args.get("use_rvc", False)),
         )
         return _text(result)
     if name == "voice_status":
