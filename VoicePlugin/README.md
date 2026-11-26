@@ -14,12 +14,10 @@
 大肥鱼自己决定要不要用声音。想用声音时，在回复里写：
 
 ```markdown
-[dfy-voice-1]: # "tender"
-这一小段要读的话
-[dfy-voice-1-end]: #
+[dfy-voice-1]: # "tender|我在呢，先靠一会儿。"
 ```
 
-这两行是 Markdown 链接引用定义，渲染时不可见；客户端按 `dfy-voice-<n>` 配对解析。多段依次用 `dfy-voice-2`、`dfy-voice-3`。
+这一行是 Markdown 链接引用定义，渲染时不可见；语音正文藏在 title 里。多段依次用 `dfy-voice-2`、`dfy-voice-3`。不要在聊天里调用 `voice_speak`，它会把音频变成文件卡。
 
 其余文字、代码、图片照常。客户端会把这段变成可点击播放的语音气泡；标记本身是 HTML 注释，不进入可见正文。
 

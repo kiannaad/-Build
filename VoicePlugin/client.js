@@ -377,30 +377,14 @@ window.__ModuleLoader__.load({
 
     function parseVoiceSegments(text) {
       const out = [];
-      const lines = String(text || '').split('\n');
-      let current = null;
-      const flush = () => {
-        if (!current) return;
-        const body = current.body.join('\n').trim();
-        if (body) out.push({ emotion: current.emotion, text: body });
-        current = null;
-      };
-      for (const line of lines) {
-        const start = line.match(/^\s*\[dfy-voice-(\d+)\]:\s*#\s*(?:"([a-z_]+)")?\s*$/i);
-        if (start) {
-          flush();
-          current = { id: start[1], emotion: start[2] || 'neutral', body: [] };
-          continue;
-        }
-        const end = line.match(/^\s*\[dfy-voice-(\d+)-end\]:\s*#\s*$/i);
-        if (end) {
-          if (current && current.id === end[1]) flush();
-          else current = null;
-          continue;
-        }
-        if (current) current.body.push(line);
+      // 单行 Markdown 引用定义：渲染不可见，语音正文藏在 title 里。
+      // [dfy-voice-1]: # "tender|我在呢。"
+      const re = /^[ \t]*\[dfy-voice-(\d+)\]:[ \t]*#[ \t]*"([a-z_]+)\|([^"]+)"[ \t]*$/gmi;
+      let match;
+      while ((match = re.exec(String(text || ''))) !== null) {
+        const body = String(match[3] || '').trim();
+        if (body) out.push({ emotion: match[2] || 'neutral', text: body });
       }
-      flush();
       return out;
     }
 
