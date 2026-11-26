@@ -377,29 +377,59 @@ window.__ModuleLoader__.load({
 
     function parseVoiceSegments(text) {
       const out = [];
-      const re = /<!--\s*dfy:voice(?::([a-z_]+))?\s*-->([\s\S]*?)<!--\s*\/dfy:voice\s*-->/gi;
-      let match;
-      while ((match = re.exec(text)) !== null) {
-        const body = String(match[2] || '').trim();
-        if (body) out.push({ emotion: match[1] || 'neutral', text: body });
+      const lines = String(text || '').split('\n');
+      let current = null;
+      const flush = () => {
+        if (!current) return;
+        const body = current.body.join('\n').trim();
+        if (body) out.push({ emotion: current.emotion, text: body });
+        current = null;
+      };
+      for (const line of lines) {
+        const start = line.match(/^\s*\[dfy-voice-(\d+)\]:\s*#\s*(?:"([a-z_]+)")?\s*$/i);
+        if (start) {
+          flush();
+          current = { id: start[1], emotion: start[2] || 'neutral', body: [] };
+          continue;
+        }
+        const end = line.match(/^\s*\[dfy-voice-(\d+)-end\]:\s*#\s*$/i);
+        if (end) {
+          if (current && current.id === end[1]) flush();
+          else current = null;
+          continue;
+        }
+        if (current) current.body.push(line);
       }
+      flush();
       return out;
     }
 
-    function VoiceAutoBubbles({ messageId, useChat }) {
+    function VoiceTurnBubbles({ turn, useChat }) {
+      ensureVoiceStyles();
       const chat = typeof useChat === 'function' ? useChat : (selector) => selector(EMPTY);
-      const source = chat((snapshot) => {
-        const node = findNode(snapshot, messageId);
-        if (!node || !node.data) return { text: '', time: 0 };
-        return {
-          text: assistantText(node.data.blocks),
-          time: typeof node.data.time === 'number' ? node.data.time : 0,
-        };
-      });
+      const snapshot = chat((value) => value);
+      const source = useMemo(() => {
+        if (!snapshot || !snapshot.locations || typeof snapshot.locations.getTurn !== 'function') {
+          return { text: '', time: 0 };
+        }
+        const keys = snapshot.locations.getTurn(turn);
+        let text = '';
+        let time = 0;
+        for (const key of keys) {
+          const node = snapshot.nodes.get(key);
+          if (!node || node.kind !== 'assistant-step' || !node.data) continue;
+          const candidate = assistantText(node.data.blocks);
+          if (candidate) {
+            text = candidate;
+            time = typeof node.data.time === 'number' ? node.data.time : time;
+          }
+        }
+        return { text, time };
+      }, [snapshot, turn]);
       const segments = useMemo(() => parseVoiceSegments(source.text), [source.text]);
       if (!segments.length) return null;
       return h('div', {
-        style: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', marginTop: 4 },
+        style: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', margin: '4px 0 6px' },
       }, segments.map((segment, index) => h(VoiceBubble, {
         key: index,
         text: segment.text,
@@ -446,11 +476,11 @@ window.__ModuleLoader__.load({
           id: 'voice-read',
           order: 20,
         }, VoiceAction));
-        ctx.slots.inject('conversation.chat.assistant-actions', () => ctx.slots.register({
-          name: 'conversation.chat.assistant-actions',
+        ctx.slots.inject('conversation.chat.turnTail', () => ctx.slots.register({
+          name: 'conversation.chat.turnTail',
           id: 'voice-bubbles',
           order: 30,
-        }, VoiceAutoBubbles));
+        }, VoiceTurnBubbles));
         ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register({
           name: 'conversation.composer.dock',
           id: 'voice-auto',
