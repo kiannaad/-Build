@@ -7,7 +7,8 @@
 
 大肥鱼不是客服，也不是播音；她像住在电脑里、跟熟人说话的一条鱼。
 
-- 青年，偏中性或女声，中低音偏软；
+- **成年女性**，20–30 岁感，温柔偏低的女声；
+- 中低音偏软，不尖、不嗲、不幼态，也不要御姐过度；
 - 语速中慢，句尾放松，带一点笑意；
 - 近场、干声、无混响、无背景音乐；
 - 不幼态、不甜腻、不夸张、不新闻腔；
@@ -18,13 +19,13 @@
 ### 英文（BreezeBlue 界面可直接用）
 
 ```text
-A young adult Mandarin voice, warm and soft, medium-low pitch, slightly androgynous, natural conversational delivery, like talking to someone close at home. Gentle smile in the voice, relaxed pace, soft sentence endings, natural breaths, clear articulation, close-mic studio recording, dry signal, no reverb, no background music, no broadcast or customer-service tone, not childish, not overly sweet, stable volume.
+A young adult female Mandarin voice, clearly female, warm and soft, medium-low pitch for a woman, natural conversational delivery, like talking to someone close at home. Gentle smile in the voice, relaxed pace, soft sentence endings, natural breaths, clear articulation, close-mic studio recording, dry signal, no reverb, no background music, no broadcast or customer-service tone, not childish, not overly sweet, not a mature "big sister" caricature, stable volume.
 ```
 
 ### 中文（如果界面支持中文描述）
 
 ```text
-普通话，青年声线，温柔偏软的中低音，略偏中性；像跟熟人聊天，不像播音或客服；语速自然稍慢，句尾放松，带一点笑意；近场录音，干声，无混响、无背景音乐、无其他人声；吐字清楚，音量稳定；不要幼态、不要甜腻、不要夸张。
+普通话，明确的女声，青年女性（20–30 岁感），温柔偏软的中低音，女声里偏低但不压成男声；像跟熟人聊天，不像播音或客服；语速自然稍慢，句尾放松，带一点笑意；近场录音，干声，无混响、无背景音乐、无其他人声；吐字清楚，音量稳定；不要幼态、不要甜腻、不要夸张，也不要刻意做成御姐音。
 ```
 
 ## 3. 参考文本
@@ -41,7 +42,7 @@ A young adult Mandarin voice, warm and soft, medium-low pitch, slightly androgyn
 
 ## 4. BreezeBlue 操作顺序
 
-1. 打开 **Voice Design**，粘贴上面的英文提示词，生成 3 个候选；
+1. 打开 **Voice Design**，粘贴上面的英文提示词，生成 3 个候选；如果界面有 Gender 选项，选 **Female**；
 2. 试听，选“像熟人说话”的那个，不要选最甜/最幼的；
 3. 打开 **Text to Speech**，用这个音色逐条生成上表文本；
 4. 每条单独导出，不要拼接；优先 WAV，只有 MP3 也行；
