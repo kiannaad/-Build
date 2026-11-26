@@ -1,0 +1,52 @@
+#stage {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(50, 25, 80, .25), transparent 45%),
+    radial-gradient(circle at 25% 70%, rgba(20, 50, 100, .18), transparent 45%),
+    #03050c;
+}
+#stage canvas { display: block; }
+
+.lab-tag {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border: 1px solid rgba(255, 160, 210, .35);
+  border-radius: 999px;
+  color: #ffb6d9;
+  font-size: 9px;
+  letter-spacing: .12em;
+}
+
+.labels {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+.graph-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: 200px;
+  color: #c9d9f2;
+  font: 11px/1.4 "Microsoft YaHei", "Segoe UI", sans-serif;
+  text-align: center;
+  white-space: nowrap;
+  opacity: .8;
+  text-shadow: 0 1px 4px #02040a, 0 0 10px #02040a;
+  transform: translate(-50%, -50%);
+}
+.graph-label.core { color: #ffe2aa; font-weight: 600; opacity: .95; }
+.graph-label.digest { color: #b9a7ff; opacity: .6; }
+.graph-label.selected { opacity: 1; color: #fff; }
+
+.hud, .panel, .legend, .hint { z-index: 6; }
+
+@media (max-width: 760px) {
+  .hint { display: none; }
+}

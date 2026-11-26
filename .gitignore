@@ -48,6 +48,9 @@ MemoryGalaxy/galaxy.json
 MemoryGalaxy/preview.html
 MemoryGalaxy/preview.png
 MemoryGalaxy/preview-3d*
+MemoryGalaxy/preview-lab*
 MemoryGalaxy/detail-preview.png
 MemoryGalaxy/detail-3d.png
 MemoryGalaxy/dom.html
+MemoryGalaxy/_three/
+MemoryGalaxy/three-*.tgz

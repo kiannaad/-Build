@@ -2,7 +2,8 @@
 
 本地 3D 记忆星图。数据来自 `MemoryService` 的 Memory v2 SQLite。
 
-- 主页：`index.html`（3d-force-graph / ThreeJS，WebGL）
+- 稳定主页：`index.html`（3d-force-graph / ThreeJS，WebGL）
+- Bloom 实验版：`galaxy-lab.html`（自定义 Three.js + 22k 粒子 + UnrealBloomPass）
 - 退路：`index-2d.html`（零依赖 Canvas 版，仍可打开）
 - 图库：`vendor/3d-force-graph.min.js`（1.80.2，离线，1.33MB）
 - 特效层：`#dust`（背景星海/银河尘埃）+ `#glow`（节点光晕），Canvas 2D + `screen` 混合
