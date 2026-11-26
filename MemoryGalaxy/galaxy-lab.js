@@ -257,10 +257,11 @@ function buildNodes() {
   const tex = radialTexture();
   for (const n of nodes) {
     if (!n.pos) continue;
-    const size = n.type === 'core' ? 82
+    const baseSize = n.type === 'core' ? 82
       : n.type === 'memory' ? 18 + (n.importance || 3) * 8
         : n.type === 'tag' ? 30
           : n.type === 'digest' ? 24 : 7;
+    const size = baseSize * 0.5;
     const mat = new THREE.SpriteMaterial({
       map: tex,
       color: new THREE.Color(colorOf(n)),
