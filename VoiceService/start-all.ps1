@@ -1,5 +1,5 @@
-# 大肥鱼语音：启动 GPT-SoVITS API + 浏览器语音桥
-# 幂等：端口已在监听就跳过；不重复起进程。
+﻿# 大肥鱼语音：启动 GPT-SoVITS API + 语音桥 + 记忆星河页面
+# 幂等：端口已在监听就跳过，不重复起进程。
 $ErrorActionPreference = 'Stop'
 
 function Test-Port([int]$port) {
@@ -15,12 +15,13 @@ if (-not (Test-Port 9880)) {
   Write-Host 'GPT-SoVITS API already listening on 9880'
 }
 
+$python = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
+if (-not $python) {
+  $python = 'C:\Users\XHLENOVO\AppData\Local\Programs\Python\Python314\python.exe'
+}
+
 if (-not (Test-Port 9881)) {
   Write-Host 'starting voice bridge on 9881...'
-  $python = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
-  if (-not $python) {
-    $python = 'C:\Users\XHLENOVO\AppData\Local\Programs\Python\Python314\python.exe'
-  }
   Start-Process -FilePath $python `
     -ArgumentList @('D:\大肥鱼\VoiceService\voice_bridge.py') `
     -WorkingDirectory 'D:\大肥鱼\VoiceService' -WindowStyle Hidden
@@ -30,10 +31,6 @@ if (-not (Test-Port 9881)) {
 
 if (-not (Test-Port 9882)) {
   Write-Host 'starting memory galaxy on 9882...'
-  $python = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
-  if (-not $python) {
-    $python = 'C:\Users\XHLENOVO\AppData\Local\Programs\Python\Python314\python.exe'
-  }
   Start-Process -FilePath $python `
     -ArgumentList @('-m', 'http.server', '9882', '--bind', '127.0.0.1', '--directory', 'D:\大肥鱼\MemoryGalaxy') `
     -WorkingDirectory 'D:\大肥鱼\MemoryGalaxy' -WindowStyle Hidden
@@ -41,7 +38,7 @@ if (-not (Test-Port 9882)) {
   Write-Host 'memory galaxy already listening on 9882'
 }
 
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 3
 foreach ($port in 9880, 9881, 9882) {
   if (Test-Port $port) { Write-Host "OK 127.0.0.1:$port" }
   else { Write-Warning "NOT listening: $port" }

@@ -296,7 +296,10 @@ window.__ModuleLoader__.load({
           setState('playing');
         } catch (error) {
           setState('error');
-          setDetail(String(error && error.message ? error.message : error).slice(0, 60));
+          const message = String(error && error.message ? error.message : error);
+          setDetail(/Failed to fetch|NetworkError/i.test(message)
+            ? '语音桥没启动：运行 start-all.ps1'
+            : message.slice(0, 60));
           window.setTimeout(() => setState('idle'), 3000);
         }
       }, [text, state]);
