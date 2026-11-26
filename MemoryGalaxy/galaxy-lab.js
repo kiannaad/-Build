@@ -17,6 +17,9 @@ const panelBody = document.getElementById('panel-body');
 const closeBtn = document.getElementById('close');
 const resetBtn = document.getElementById('reset');
 const labelLayer = document.getElementById('labels');
+if (new URLSearchParams(window.location.search).has('embed')) {
+  document.body.classList.add('embed');
+}
 
 const KIND_COLORS = {
   capability: '#7cd8ff', user_preference: '#ffb3d1', user_fact: '#ffd28a',
@@ -55,6 +58,8 @@ let startX = 0;
 let startY = 0;
 let moved = 0;
 let dragging = false;
+let hoverNode = null;
+let hoverTip = null;
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const esc = (s) => String(s == null ? '' : s)
@@ -498,18 +503,31 @@ function bindUi() {
   });
   renderer.domElement.addEventListener('pointerdown', (ev) => {
     dragging = true; moved = 0; startX = ev.clientX; startY = ev.clientY;
+    if (hoverTip) hoverTip.classList.remove('on');
   });
   renderer.domElement.addEventListener('pointermove', (ev) => {
-    if (dragging) { moved += Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY); startX = ev.clientX; startY = ev.clientY; }
+    if (dragging) {
+      moved += Math.abs(ev.clientX - startX) + Math.abs(ev.clientY - startY);
+      startX = ev.clientX; startY = ev.clientY;
+      if (hoverTip) hoverTip.classList.remove('on');
+      return;
+    }
+    const n = nodeAt(ev);
+    if (n !== hoverNode) showHover(n, ev);
+    else if (n && hoverTip) {
+      hoverTip.style.left = Math.min(window.innerWidth - 290, ev.clientX + 14) + 'px';
+      hoverTip.style.top = Math.min(window.innerHeight - 120, ev.clientY + 14) + 'px';
+    }
   });
   renderer.domElement.addEventListener('pointerup', (ev) => {
     if (moved < 6) pick(ev);
     dragging = false;
   });
+  renderer.domElement.addEventListener('pointerleave', () => showHover(null, null));
   window.addEventListener('resize', resize);
 }
 
-function pick(ev) {
+function nodeAt(ev) {
   const rect = renderer.domElement.getBoundingClientRect();
   const mouse = new THREE.Vector2(
     ((ev.clientX - rect.left) / rect.width) * 2 - 1,
@@ -519,11 +537,45 @@ function pick(ev) {
   ray.params.Sprite = { threshold: 0.1 };
   ray.setFromCamera(mouse, camera);
   const hits = ray.intersectObjects(nodeSprites.filter((s) => s.visible), false);
-  if (hits.length) {
-    selectNode(hits[0].object.userData.node);
-  } else {
-    selectNode(null);
+  return hits.length ? hits[0].object.userData.node : null;
+}
+
+function ensureHoverTip() {
+  if (hoverTip) return hoverTip;
+  hoverTip = document.createElement('div');
+  hoverTip.className = 'hover-tip';
+  document.body.appendChild(hoverTip);
+  return hoverTip;
+}
+
+function showHover(n, ev) {
+  const tip = ensureHoverTip();
+  if (!n) {
+    hoverNode = null;
+    tip.classList.remove('on');
+    renderer.domElement.style.cursor = '';
+    return;
   }
+  hoverNode = n;
+  const kind = n.type === 'memory' ? (KIND_NAMES[n.kind] || n.kind)
+    : n.type === 'core' ? '核心'
+      : n.type === 'event' ? '事件'
+        : n.type === 'tag' ? '标签'
+          : n.type === 'digest' ? '日摘要' : n.type;
+  const body = (n.body || n.label || '').replace(/\s+/g, ' ').slice(0, 120);
+  tip.innerHTML = `<div class="hover-kind">${esc(kind)}</div>
+    <div class="hover-title">${esc(n.label)}</div>
+    <div class="hover-body">${esc(body)}</div>`;
+  tip.style.left = Math.min(window.innerWidth - 290, ev.clientX + 14) + 'px';
+  tip.style.top = Math.min(window.innerHeight - 120, ev.clientY + 14) + 'px';
+  tip.classList.add('on');
+  renderer.domElement.style.cursor = 'pointer';
+}
+
+function pick(ev) {
+  const n = nodeAt(ev);
+  if (n) selectNode(n);
+  else selectNode(null);
 }
 
 function resize() {

@@ -28,8 +28,21 @@ if (-not (Test-Port 9881)) {
   Write-Host 'voice bridge already listening on 9881'
 }
 
+if (-not (Test-Port 9882)) {
+  Write-Host 'starting memory galaxy on 9882...'
+  $python = (Get-Command python.exe -ErrorAction SilentlyContinue).Source
+  if (-not $python) {
+    $python = 'C:\Users\XHLENOVO\AppData\Local\Programs\Python\Python314\python.exe'
+  }
+  Start-Process -FilePath $python `
+    -ArgumentList @('-m', 'http.server', '9882', '--bind', '127.0.0.1', '--directory', 'D:\大肥鱼\MemoryGalaxy') `
+    -WorkingDirectory 'D:\大肥鱼\MemoryGalaxy' -WindowStyle Hidden
+} else {
+  Write-Host 'memory galaxy already listening on 9882'
+}
+
 Start-Sleep -Seconds 2
-foreach ($port in 9880, 9881) {
+foreach ($port in 9880, 9881, 9882) {
   if (Test-Port $port) { Write-Host "OK 127.0.0.1:$port" }
   else { Write-Warning "NOT listening: $port" }
 }
